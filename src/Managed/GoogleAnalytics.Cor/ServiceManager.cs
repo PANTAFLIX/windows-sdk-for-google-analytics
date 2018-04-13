@@ -12,19 +12,19 @@ namespace GoogleAnalytics
     /// </summary>
     public class ServiceManager : IServiceManager
     {
-        static Random random;
-        static readonly Uri endPointUnsecureDebug = new Uri("http://www.google-analytics.com/debug/collect");
-        static readonly Uri endPointSecureDebug = new Uri("https://ssl.google-analytics.com/debug/collect");
-        static readonly Uri endPointUnsecure = new Uri("http://www.google-analytics.com/collect");
-        static readonly Uri endPointSecure = new Uri("https://ssl.google-analytics.com/collect");
+        static Random _random;
+        static readonly Uri EndPointUnsecureDebug = new Uri("http://www.google-analytics.com/debug/collect");
+        static readonly Uri EndPointSecureDebug = new Uri("https://ssl.google-analytics.com/debug/collect");
+        static readonly Uri EndPointUnsecure = new Uri("http://www.google-analytics.com/collect");
+        static readonly Uri EndPointSecure = new Uri("https://ssl.google-analytics.com/collect");
 
-        readonly Queue<Hit> hits;
-        readonly IList<Task> dispatchingTasks;
-        readonly TokenBucket hitTokenBucket;
+        readonly Queue<Hit> _hits;
+        readonly IList<Task> _dispatchingTasks;
+        readonly TokenBucket _hitTokenBucket;
 
-        Timer timer;
-        TimeSpan dispatchPeriod;
-        bool isEnabled = true;
+        Timer _timer;
+        TimeSpan _dispatchPeriod;
+        bool _isEnabled = true;
 
         /// <summary>
         /// Provides notification that a <see cref="Hit"/> has been been successfully sent.
@@ -48,11 +48,11 @@ namespace GoogleAnalytics
         public ServiceManager()
         {
             PostData = true;
-            dispatchingTasks = new List<Task>();
-            hits = new Queue<Hit>();
+            _dispatchingTasks = new List<Task>();
+            _hits = new Queue<Hit>();
             DispatchPeriod = TimeSpan.Zero;
             IsSecure = true;
-            hitTokenBucket = new TokenBucket(60, .5);
+            _hitTokenBucket = new TokenBucket(60, .5);
         }
 
         /// <summary>
@@ -91,20 +91,20 @@ namespace GoogleAnalytics
         /// <remarks>Setting to TimeSpan.Zero will cause the hit to get sent immediately.</remarks>
         public TimeSpan DispatchPeriod
         {
-            get { return dispatchPeriod; }
+            get { return _dispatchPeriod; }
             set
             {
-                if (dispatchPeriod != value)
+                if (_dispatchPeriod != value)
                 {
-                    dispatchPeriod = value;
-                    if (timer != null)
+                    _dispatchPeriod = value;
+                    if (_timer != null)
                     {
-                        timer.Dispose();
-                        timer = null;
+                        _timer.Dispose();
+                        _timer = null;
                     }
-                    if (dispatchPeriod > TimeSpan.Zero)
+                    if (_dispatchPeriod > TimeSpan.Zero)
                     {
-                        timer = new Timer(timer_Tick, null, DispatchPeriod, DispatchPeriod);
+                        _timer = new Timer(timer_Tick, null, DispatchPeriod, DispatchPeriod);
                     }
                 }
             }
@@ -116,13 +116,13 @@ namespace GoogleAnalytics
         /// <remarks>Typically this is used to indicate whether or not the network is available.</remarks>
         public bool IsEnabled
         {
-            get { return isEnabled; }
+            get { return _isEnabled; }
             set
             {
-                if (isEnabled != value)
+                if (_isEnabled != value)
                 {
-                    isEnabled = value;
-                    if (isEnabled)
+                    _isEnabled = value;
+                    if (_isEnabled)
                     {
                         if (DispatchPeriod >= TimeSpan.Zero)
                         {
@@ -139,9 +139,9 @@ namespace GoogleAnalytics
         /// <remarks>If a <see cref="Hit"/> is actively beeing sent, this will not abort the request.</remarks>
         public void Clear()
         {
-            lock (hits)
+            lock (_hits)
             {
-                hits.Clear();
+                _hits.Clear();
             }
         }
 
@@ -151,14 +151,14 @@ namespace GoogleAnalytics
         /// <returns>Returns once all items that were in the queue at the time the method was called have finished being sent.</returns>
         public async Task DispatchAsync()
         {
-            if (!isEnabled) return;
+            if (!_isEnabled) return;
 
             Task allDispatchingTasks = null;
-            lock (dispatchingTasks)
+            lock (_dispatchingTasks)
             {
-                if (dispatchingTasks.Any())
+                if (_dispatchingTasks.Any())
                 {
-                    allDispatchingTasks = Task.WhenAll(dispatchingTasks);
+                    allDispatchingTasks = Task.WhenAll(_dispatchingTasks);
                 }
             }
             if (allDispatchingTasks != null)
@@ -166,12 +166,12 @@ namespace GoogleAnalytics
                 await allDispatchingTasks;
             }
 
-            if (!isEnabled) return;
+            if (!_isEnabled) return;
 
             Hit[] hitsToSend;
-            lock (hits)
+            lock (_hits)
             {
-                hitsToSend = hits.ToArray();
+                hitsToSend = _hits.ToArray();
             }
             if (hitsToSend.Any())
             {
@@ -189,9 +189,9 @@ namespace GoogleAnalytics
             }
             else
             {
-                lock (hits)
+                lock (_hits)
                 {
-                    hits.Enqueue(hit);
+                    _hits.Enqueue(hit);
                 }
             }
         }
@@ -206,10 +206,10 @@ namespace GoogleAnalytics
             await DispatchAsync(); // flush all pending hits in the queue
 
             // shut down the timer if enabled
-            if (timer != null)
+            if (_timer != null)
             {
-                timer.Dispose();
-                timer = null;
+                _timer.Dispose();
+                _timer = null;
             }
         }
 
@@ -219,9 +219,9 @@ namespace GoogleAnalytics
         public void Resume()
         {
             // restore the timer if appropriate.
-            if (dispatchPeriod > TimeSpan.Zero)
+            if (_dispatchPeriod > TimeSpan.Zero)
             {
-                timer = new Timer(timer_Tick, null, DispatchPeriod, DispatchPeriod);
+                _timer = new Timer(timer_Tick, null, DispatchPeriod, DispatchPeriod);
             }
         }
 
@@ -232,9 +232,9 @@ namespace GoogleAnalytics
 
         async Task RunDispatchingTask(Task newDispatchingTask)
         {
-            lock (dispatchingTasks)
+            lock (_dispatchingTasks)
             {
-                dispatchingTasks.Add(newDispatchingTask);
+                _dispatchingTasks.Add(newDispatchingTask);
             }
             try
             {
@@ -242,9 +242,9 @@ namespace GoogleAnalytics
             }
             finally
             {
-                lock (dispatchingTasks)
+                lock (_dispatchingTasks)
                 {
-                    dispatchingTasks.Remove(newDispatchingTask);
+                    _dispatchingTasks.Remove(newDispatchingTask);
                 }
             }
         }
@@ -256,7 +256,7 @@ namespace GoogleAnalytics
                 var now = DateTimeOffset.UtcNow;
                 foreach (var hit in hits)
                 {
-                    if (isEnabled && (!ThrottlingEnabled || hitTokenBucket.Consume()))
+                    if (_isEnabled && (!ThrottlingEnabled || _hitTokenBucket.Consume()))
                     {
                         // clone the data
                         var hitData = hit.Data.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
@@ -267,7 +267,7 @@ namespace GoogleAnalytics
                     {
                         lock (hits) // add back to queue
                         {
-                            this.hits.Enqueue(hit);
+                            this._hits.Enqueue(hit);
                         }
                     }
                 }
@@ -310,7 +310,7 @@ namespace GoogleAnalytics
 
         async Task<HttpResponseMessage> SendHitAsync(Hit hit, HttpClient httpClient, IDictionary<string, string> hitData)
         {
-            var endPoint = IsDebug ? (IsSecure ? endPointSecureDebug : endPointUnsecureDebug) : (IsSecure ? endPointSecure : endPointUnsecure);
+            var endPoint = IsDebug ? (IsSecure ? EndPointSecureDebug : EndPointUnsecureDebug) : (IsSecure ? EndPointSecure : EndPointUnsecure);
             if (PostData)
             {
                 using (var content = GetEncodedContent(hitData))
@@ -351,11 +351,11 @@ namespace GoogleAnalytics
 
         static string GetCacheBuster()
         {
-            if (random == null)
+            if (_random == null)
             {
-                random = new Random();
+                _random = new Random();
             }
-            return random.Next().ToString();
+            return _random.Next().ToString();
         }
 
         static ByteArrayContent GetEncodedContent(IEnumerable<KeyValuePair<string, string>> nameValueCollection)
@@ -365,11 +365,11 @@ namespace GoogleAnalytics
 
         static string GetUrlEncodedString(IEnumerable<KeyValuePair<string, string>> nameValueCollection)
         {
-            const int MaxUriStringSize = 65519;
+            const int maxUriStringSize = 65519;
 
             return string.Join("&", nameValueCollection
                 .Where(item => item.Value != null)
-                .Select(item => item.Key + "=" + Uri.EscapeDataString(item.Value.Length > MaxUriStringSize ? item.Value.Substring(0, MaxUriStringSize) : item.Value)));
+                .Select(item => item.Key + "=" + Uri.EscapeDataString(item.Value.Length > maxUriStringSize ? item.Value.Substring(0, maxUriStringSize) : item.Value)));
         }
     }
 

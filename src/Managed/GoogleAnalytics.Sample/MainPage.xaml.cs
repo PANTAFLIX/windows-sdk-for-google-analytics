@@ -9,12 +9,12 @@ namespace GoogleAnalytics.Sample
     public sealed partial class MainPage : Page
     {
 
-        bool isRunningInDebugMode; 
+        bool _isRunningInDebugMode; 
              
         public MainPage()
         {
             this.InitializeComponent();
-            isRunningInDebugMode = IsDebugRequest.IsChecked.Value; 
+            _isRunningInDebugMode = IsDebugRequest.IsChecked.Value; 
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -79,8 +79,8 @@ namespace GoogleAnalytics.Sample
 
         private void IsDebugRequest_Checked(object sender, RoutedEventArgs e)
         {
-            isRunningInDebugMode = IsDebugRequest.IsChecked.Value;
-            Visibility visibility = isRunningInDebugMode  ? Visibility.Visible : Visibility.Collapsed;
+            _isRunningInDebugMode = IsDebugRequest.IsChecked.Value;
+            Visibility visibility = _isRunningInDebugMode  ? Visibility.Visible : Visibility.Collapsed;
             RequestPanel.Visibility = visibility;
             ResponsePanel.Visibility = visibility;
 
@@ -89,7 +89,7 @@ namespace GoogleAnalytics.Sample
 
         void Log(Hit hit, string message)
         {
-            if (isRunningInDebugMode)
+            if (_isRunningInDebugMode)
             {
                 if ( AnalyticsManager.Current.DispatchPeriod > TimeSpan.Zero )
                 {

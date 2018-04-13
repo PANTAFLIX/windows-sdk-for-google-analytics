@@ -1,4 +1,5 @@
 ﻿using System;
+using GoogleAnalytics;
 
 namespace GoogleAnalytics.UnitTests
 {
@@ -7,8 +8,8 @@ namespace GoogleAnalytics.UnitTests
     /// </summary>
     public sealed class MockPlatformInfoProvider : IPlatformInfoProvider
     {
-        Dimensions? viewPortResolution;
-        Dimensions? screenResolution;
+        Dimensions? _viewPortResolution;
+        Dimensions? _screenResolution;
 
 
 #if NATIVESDK_TEST        
@@ -57,10 +58,10 @@ namespace GoogleAnalytics.UnitTests
         /// <inheritdoc/>
         public Dimensions? ScreenResolution
         {
-            get { return screenResolution; }
+            get { return _screenResolution; }
             set
             {
-                screenResolution = value;
+                _screenResolution = value;
                 ScreenResolutionChanged?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -68,10 +69,10 @@ namespace GoogleAnalytics.UnitTests
         /// <inheritdoc/>
         public Dimensions? ViewPortResolution
         {
-            get { return viewPortResolution; }
+            get { return _viewPortResolution; }
             set
             {
-                viewPortResolution = value;
+                _viewPortResolution = value;
                 ViewPortResolutionChanged?.Invoke(this, EventArgs.Empty);
             }
         }

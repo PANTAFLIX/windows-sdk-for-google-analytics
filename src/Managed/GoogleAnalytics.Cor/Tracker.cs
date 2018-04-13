@@ -7,7 +7,7 @@ namespace GoogleAnalytics
     /// </summary>
     public sealed class Tracker : SimpleTracker
     {
-        readonly IPlatformInfoProvider platformInfoProvider;
+        readonly IPlatformInfoProvider _platformInfoProvider;
 
         /// <summary>
         /// Instantiates a new instance of <see cref="Tracker"/>.
@@ -18,7 +18,7 @@ namespace GoogleAnalytics
         public Tracker(string propertyId, IPlatformInfoProvider platformInfoProvider, IServiceManager serviceManager)
             :base(propertyId, serviceManager)
         {
-            this.platformInfoProvider = platformInfoProvider;
+            this._platformInfoProvider = platformInfoProvider;
             if (platformInfoProvider != null)
             {
                 ClientId = platformInfoProvider.AnonymousClientId;
@@ -33,12 +33,12 @@ namespace GoogleAnalytics
         
         void platformTrackingInfo_ViewPortResolutionChanged(object sender, EventArgs args)
         {
-            ViewportSize = platformInfoProvider.ViewPortResolution;
+            ViewportSize = _platformInfoProvider.ViewPortResolution;
         }
 
         void platformTrackingInfo_ScreenResolutionChanged(object sender, EventArgs args)
         {
-            ScreenResolution = platformInfoProvider.ScreenResolution;
+            ScreenResolution = _platformInfoProvider.ScreenResolution;
         }
     }
 }

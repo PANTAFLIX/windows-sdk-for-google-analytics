@@ -22,7 +22,7 @@ namespace GoogleAnalytics.UnitTests
 
         //Session 
         public const string SessionControl = "sc"; // 'start' , 'end' ; 
-        public const string IPOverride = "uip";
+        public const string IpOverride = "uip";
         public const string UserAgentOverride = "ua";
         public const string GeographicOverride = "geoid";
 
@@ -86,7 +86,7 @@ namespace GoogleAnalytics.UnitTests
         public const string ItemCategory = "iv";
 
         // Enhanced Commerce 
-        public const string ProductSKU = "pr{productIndex}id";
+        public const string ProductSku = "pr{productIndex}id";
         public const string ProductName = "pr{productIndex}nm";
         public const string ProductBrand = "pr{productIndex}br";
         public const string ProductCategory = "pr{productIndex}ca";
@@ -109,7 +109,7 @@ namespace GoogleAnalytics.UnitTests
         public const string ProductActionCheckoutStep = "cos";
         public const string ProductActionCheckoutStepOption = "col";
         public const string ProductImpressionListName = "il{listIndex}nm";
-        public const string ProductImpressionSKU = "il{listIndex}pi{productIndex}id";
+        public const string ProductImpressionSku = "il{listIndex}pi{productIndex}id";
         public const string ProductImpressionBrand = "il{listIndex}pi{productIndex}id";
         public const string ProductImpressionCategory = "il{listIndex}pi{productIndex}id";
         public const string ProductImpressionVariant = "il{listIndex}pi{productIndex}va";

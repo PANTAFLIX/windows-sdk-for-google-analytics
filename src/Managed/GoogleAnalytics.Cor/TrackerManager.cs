@@ -8,8 +8,8 @@ namespace GoogleAnalytics
     /// </summary>
     public class TrackerManager : ServiceManager
     {
-        readonly IPlatformInfoProvider platformInfoProvider;
-        readonly Dictionary<string, Tracker> trackers;
+        readonly IPlatformInfoProvider _platformInfoProvider;
+        readonly Dictionary<string, Tracker> _trackers;
 
         /// <summary>
         /// Instantiates a new instance of <see cref="TrackerManager"/>.
@@ -17,8 +17,8 @@ namespace GoogleAnalytics
         /// <param name="platformInfoProvider">An object capable of providing platform and environment specific information.</param>
         public TrackerManager(IPlatformInfoProvider platformInfoProvider)
         {
-            trackers = new Dictionary<string, Tracker>();
-            this.platformInfoProvider = platformInfoProvider;
+            _trackers = new Dictionary<string, Tracker>();
+            this._platformInfoProvider = platformInfoProvider;
             UserAgent = platformInfoProvider.UserAgent;
         }
 
@@ -27,7 +27,7 @@ namespace GoogleAnalytics
         /// </summary>
         protected ICollection<Tracker> Trackers
         {
-            get { return trackers.Values; }
+            get { return _trackers.Values; }
         }
 
         /// <summary>
@@ -50,10 +50,10 @@ namespace GoogleAnalytics
         public virtual Tracker CreateTracker(string propertyId)
         {
             propertyId = propertyId ?? string.Empty;
-            if (!trackers.ContainsKey(propertyId))
+            if (!_trackers.ContainsKey(propertyId))
             {
-                var tracker = new Tracker(propertyId, platformInfoProvider, this);
-                trackers.Add(propertyId, tracker);
+                var tracker = new Tracker(propertyId, _platformInfoProvider, this);
+                _trackers.Add(propertyId, tracker);
                 if (DefaultTracker == null)
                 {
                     DefaultTracker = tracker;
@@ -62,7 +62,7 @@ namespace GoogleAnalytics
             }
             else
             {
-                return trackers[propertyId];
+                return _trackers[propertyId];
             }
         }
 
@@ -72,7 +72,7 @@ namespace GoogleAnalytics
         /// <param name="tracker">The instance to remove and clean up.</param>
         public void CloseTracker(Tracker tracker)
         {
-            trackers.Remove(tracker.PropertyId);
+            _trackers.Remove(tracker.PropertyId);
             if (DefaultTracker == tracker)
             {
                 DefaultTracker = null;
@@ -84,7 +84,7 @@ namespace GoogleAnalytics
         /// </summary>
         public IPlatformInfoProvider PlatformTrackingInfo
         {
-            get { return platformInfoProvider; }
+            get { return _platformInfoProvider; }
         }
 
         /// <inheritdoc/>

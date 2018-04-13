@@ -13,15 +13,15 @@ namespace GoogleAnalytics
     /// </summary>
     public sealed class AnalyticsManager : TrackerManager
     {
-        const string Key_AppOptOut = "GoogleAnaltyics.AppOptOut";
+        private const string KeyAppOptOut = "GoogleAnaltyics.AppOptOut";
 
-        static AnalyticsManager current;
+        static AnalyticsManager _current;
 
-        bool isAppOptOutSet;
-        Application application;
-        bool reportUncaughtExceptions;
-        bool autoTrackNetworkConnectivity;
-        bool autoAppLifetimeMonitoring;
+        private bool _isAppOptOutSet;
+        private readonly Application _application;
+        private bool _reportUncaughtExceptions;
+        private bool _autoTrackNetworkConnectivity;
+        private bool _autoAppLifetimeMonitoring;
 
         /// <summary>
         /// Instantiates a new instance of <see cref="AnalyticsManager"/> 
@@ -29,12 +29,12 @@ namespace GoogleAnalytics
         /// <param name="platformInfoProvider"> The platform info provider to be used by this Analytics Manager. Can not be null.</param>
         public AnalyticsManager ( IPlatformInfoProvider platformInfoProvider) : base (platformInfoProvider )
         {
-            this.application = Application.Current; 
+            _application = Application.Current; 
         }
         
         AnalyticsManager(Application application) : base(new PlatformInfoProvider())
         {
-            this.application = application;
+            this._application = application;
         }
 
         /// <summary>
@@ -44,11 +44,11 @@ namespace GoogleAnalytics
         {
             get
             {
-                if (current == null)
+                if (_current == null)
                 {
-                    current = new AnalyticsManager(Application.Current);
+                    _current = new AnalyticsManager(Application.Current);
                 }
-                return current;
+                return _current;
             }
         }
 
@@ -60,14 +60,14 @@ namespace GoogleAnalytics
         {
             get
             {
-                if (!isAppOptOutSet) LoadAppOptOut();
+                if (!_isAppOptOutSet) LoadAppOptOut();
                 return base.AppOptOut;
             }
             set
             {
                 base.AppOptOut = value;
-                isAppOptOutSet = true;
-                ApplicationData.Current.LocalSettings.Values[Key_AppOptOut] = value;
+                _isAppOptOutSet = true;
+                ApplicationData.Current.LocalSettings.Values[KeyAppOptOut] = value;
                 if (value) Clear();
             }
         }
@@ -79,14 +79,14 @@ namespace GoogleAnalytics
         {
             get
             {
-                return reportUncaughtExceptions;
+                return _reportUncaughtExceptions;
             }
             set
             {
-                if (reportUncaughtExceptions != value)
+                if (_reportUncaughtExceptions != value)
                 {
-                    reportUncaughtExceptions = value;
-                    if (reportUncaughtExceptions)
+                    _reportUncaughtExceptions = value;
+                    if (_reportUncaughtExceptions)
                     {
                         TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
                         CoreApplication.UnhandledErrorDetected += CoreApplication_UnhandledErrorDetected;
@@ -109,22 +109,22 @@ namespace GoogleAnalytics
         {
             get
             {
-                return autoAppLifetimeMonitoring;
+                return _autoAppLifetimeMonitoring;
             }
             set
             {
-                if (autoAppLifetimeMonitoring != value)
+                if (_autoAppLifetimeMonitoring != value)
                 {
-                    autoAppLifetimeMonitoring = value;
-                    if (autoAppLifetimeMonitoring)
+                    _autoAppLifetimeMonitoring = value;
+                    if (_autoAppLifetimeMonitoring)
                     {
-                        application.Suspending += Application_Suspending;
-                        application.Resuming += Application_Resuming;
+                        _application.Suspending += Application_Suspending;
+                        _application.Resuming += Application_Resuming;
                     }
                     else
                     {
-                        application.Suspending -= Application_Suspending;
-                        application.Resuming -= Application_Resuming;
+                        _application.Suspending -= Application_Suspending;
+                        _application.Resuming -= Application_Resuming;
                     }
                 }
             }
@@ -137,14 +137,14 @@ namespace GoogleAnalytics
         {
             get
             {
-                return autoTrackNetworkConnectivity;
+                return _autoTrackNetworkConnectivity;
             }
             set
             {
-                if (autoTrackNetworkConnectivity != value)
+                if (_autoTrackNetworkConnectivity != value)
                 {
-                    autoTrackNetworkConnectivity = value;
-                    if (autoTrackNetworkConnectivity)
+                    _autoTrackNetworkConnectivity = value;
+                    if (_autoTrackNetworkConnectivity)
                     {
                         UpdateConnectionStatus();
                         NetworkInformation.NetworkStatusChanged += NetworkInformation_NetworkStatusChanged;
@@ -176,15 +176,15 @@ namespace GoogleAnalytics
 
         void LoadAppOptOut()
         {
-            if (ApplicationData.Current.LocalSettings.Values.ContainsKey(Key_AppOptOut))
+            if (ApplicationData.Current.LocalSettings.Values.ContainsKey(KeyAppOptOut))
             {
-                base.AppOptOut = (bool)ApplicationData.Current.LocalSettings.Values[Key_AppOptOut];
+                base.AppOptOut = (bool)ApplicationData.Current.LocalSettings.Values[KeyAppOptOut];
             }
             else
             {
                 base.AppOptOut = false;
             }
-            isAppOptOutSet = true;
+            _isAppOptOutSet = true;
         }
 
         void NetworkInformation_NetworkStatusChanged(object sender)

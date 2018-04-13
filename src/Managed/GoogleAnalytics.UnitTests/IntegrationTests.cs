@@ -78,7 +78,7 @@ namespace GoogleAnalytics.UnitTests
             await SendHitAsync(hit);
         }
 
-        static object syncObject = new object();
+        static object _syncObject = new object();
 
         async Task SendHitAsync(HitBuilder hit)
         {
@@ -181,7 +181,7 @@ namespace GoogleAnalytics.UnitTests
         }
 
         [TestMethod]
-        public async Task SentMalformedEventWithUIThreadCallback ()
+        public async Task SentMalformedEventWithUiThreadCallback ()
         {        
 #if NATIVESDK_TEST
             bool fireInUIThread = false;
@@ -264,7 +264,7 @@ namespace GoogleAnalytics.UnitTests
         }
 
 
-        private bool IsCallingInUIThread()
+        private bool IsCallingInUiThread()
         {
             var window = Windows.UI.Core.CoreWindow.GetForCurrentThread();
             if (window != null)

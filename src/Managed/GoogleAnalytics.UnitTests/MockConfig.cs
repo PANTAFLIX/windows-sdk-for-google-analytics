@@ -9,16 +9,16 @@ namespace GoogleAnalytics.UnitTests
 {
     internal class MockConfig
     {
-        int randomScreenCount = 10;
+        int _randomScreenCount = 10;
 
-        private Random random;
-        private string defaultClientId = "me";
-        private string defaultScreenName = "screen";
-        private string machineName = string.Empty;
+        private Random _random;
+        private string _defaultClientId = "me";
+        private string _defaultScreenName = "screen";
+        private string _machineName = string.Empty;
 
         public MockConfig()
         {
-            random = new Random(DateTime.Now.Millisecond);
+            _random = new Random(DateTime.Now.Millisecond);
         }
 
         public RandomNess ClientIdRandomization { get; set; } = RandomNess.None;
@@ -33,41 +33,41 @@ namespace GoogleAnalytics.UnitTests
                 // a  hack towards one-time ;) 
                 if (ClientIdRandomization == RandomNess.OneTime)
                 {
-                    defaultClientId = GetRandomClientId();
+                    _defaultClientId = GetRandomClientId();
                     ClientIdRandomization = RandomNess.None;
                 }
                 else if (ClientIdRandomization == RandomNess.EveryTime)
                 {
                     return GetRandomClientId();
                 }
-                return defaultClientId;
+                return _defaultClientId;
             }
             set {
-                defaultClientId = value;
+                _defaultClientId = value;
             }
         }
         public string AppName { get; set; }
 
         public string ScreenName
         {
-            get { return (UsesRandomScreenName ? GetRandomScreenName() : defaultScreenName); }
-            set { defaultScreenName = value; }
+            get { return (UsesRandomScreenName ? GetRandomScreenName() : _defaultScreenName); }
+            set { _defaultScreenName = value; }
         }
         public string GetRandomScreenName()
         {
-            int index = random.Next(0, randomScreenCount);
-            return $"{defaultScreenName}{index:f0}";
+            int index = _random.Next(0, _randomScreenCount);
+            return $"{_defaultScreenName}{index:f0}";
         }
 
         public string GetRandomClientId()
         {
-            int index = random.Next(0, randomScreenCount);
-            return $"{defaultClientId}{index:00}";
+            int index = _random.Next(0, _randomScreenCount);
+            return $"{_defaultClientId}{index:00}";
         }
 
         private static MockConfig GetConfig()
         {
-            return oneTimeConfigNoDebug;
+            return OneTimeConfigNoDebug;
         }
         public Ecommerce.Product GetProduct  (int index) 
         {
@@ -103,7 +103,7 @@ namespace GoogleAnalytics.UnitTests
             get
             {
 #if NETFX_CORE
-                if (string.IsNullOrEmpty(machineName))
+                if (string.IsNullOrEmpty(_machineName))
                 {
                     var hostNamesList = Windows.Networking.Connectivity.NetworkInformation
                             .GetHostNames();
@@ -116,11 +116,11 @@ namespace GoogleAnalytics.UnitTests
                     }
                 }
 #endif 
-                return machineName;
+                return _machineName;
             }
             set
             {
-                machineName = value;
+                _machineName = value;
             }
         }
 
@@ -135,7 +135,7 @@ namespace GoogleAnalytics.UnitTests
 
         #region MockData 
 
-        internal static MockConfig defaultTestConfig = new MockConfig()
+        internal static MockConfig DefaultTestConfig = new MockConfig()
         {
             PropertyId = "UA-39959863-1",
             ClientId = "me",
@@ -143,7 +143,7 @@ namespace GoogleAnalytics.UnitTests
             ScreenName = "home",
         };
 
-        static internal MockConfig oneTimeConfigNoDebug = new MockConfig()
+        static internal MockConfig OneTimeConfigNoDebug = new MockConfig()
         {
             PropertyId = "UA-85149873-4",
             ClientId = "Jaime Test",

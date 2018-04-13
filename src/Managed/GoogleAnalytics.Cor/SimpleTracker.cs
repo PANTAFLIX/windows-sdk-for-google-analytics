@@ -9,8 +9,8 @@ namespace GoogleAnalytics
     /// </summary>
     public class SimpleTracker
     {
-        readonly IServiceManager serviceManager;
-        readonly IDictionary<string, string> data;
+        readonly IServiceManager _serviceManager;
+        readonly IDictionary<string, string> _data;
 
         /// <summary>
         /// Instantiates a new instance of <see cref="Tracker"/>.
@@ -22,8 +22,8 @@ namespace GoogleAnalytics
             if (propertyId == null) throw new ArgumentNullException(nameof(propertyId));
             if (serviceManager == null) throw new ArgumentNullException(nameof(serviceManager));
 
-            data = new Dictionary<string, string>();
-            this.serviceManager = serviceManager;
+            _data = new Dictionary<string, string>();
+            this._serviceManager = serviceManager;
 
             PropertyId = propertyId;
             SampleRate = 100.0F;
@@ -47,7 +47,7 @@ namespace GoogleAnalytics
         /// </summary>
         /// <remarks>Optional.</remarks>
         /// <seealso href="https://developers.google.com/analytics/devguides/collection/protocol/v1/parameters#aiid"/>
-        public bool AnonymizeIP { get; set; }
+        public bool AnonymizeIp { get; set; }
 
         ///// <summary>
         ///// Gets or sets the data source of the hit. Hits sent from analytics.js will have data source set to 'web'; hits sent from one of the mobile SDKs will have data source set to 'app'.
@@ -316,7 +316,7 @@ namespace GoogleAnalytics
         /// <returns>The value associated with the key.</returns>
         public string Get(string key)
         {
-            return data[key];
+            return _data[key];
         }
 
         /// <summary>
@@ -326,7 +326,7 @@ namespace GoogleAnalytics
         /// <param name="value">A string value to be sent to Google servers. A null value denotes that the value should not be sent over wire.</param>
         public void Set(string key, string value)
         {
-            data[key] = value;
+            _data[key] = value;
         }
 
         IDictionary<string, string> AddRequiredHitData(IDictionary<string, string> @params)
@@ -342,7 +342,7 @@ namespace GoogleAnalytics
             if (AppId != null) result.Add("aid", AppId);
             if (AppInstallerId != null) result.Add("aiid", AppInstallerId);
             if (ScreenName != null) result.Add("cd", ScreenName);
-            if (AnonymizeIP) result.Add("aip", "1");
+            if (AnonymizeIp) result.Add("aip", "1");
             if (ScreenResolution.HasValue) result.Add("sr", string.Format("{0}x{1}", ScreenResolution.Value.Width, ScreenResolution.Value.Height));
             if (ViewportSize.HasValue) result.Add("vp", string.Format("{0}x{1}", ViewportSize.Value.Width, ViewportSize.Value.Height));
             if (Language != null) result.Add("ul", Language);
@@ -374,7 +374,7 @@ namespace GoogleAnalytics
             //if (LinkId != null) result.Add("linkid", LinkId);
             //if (DocumentLocationUrl != null) result.Add("dl", DocumentLocationUrl);
 
-            foreach (var item in data.Concat(@params))
+            foreach (var item in _data.Concat(@params))
             {
                 result[item.Key] = item.Value;
             }
@@ -393,7 +393,7 @@ namespace GoogleAnalytics
             {
                 if (!IsSampledOut())
                 {
-                    serviceManager.EnqueueHit(AddRequiredHitData(@params));
+                    _serviceManager.EnqueueHit(AddRequiredHitData(@params));
                 }
             }
         }

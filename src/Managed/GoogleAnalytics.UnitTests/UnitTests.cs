@@ -93,7 +93,7 @@ namespace GoogleAnalytics.UnitTests
             Assert.IsTrue(mockServiceManager.LastDataEnqueued[ParameterNames.ScreenName] == screenName);
             Assert.IsTrue(mockServiceManager.LastDataEnqueued[ParameterNames.Referrer] == referrer);
             Assert.IsTrue(mockServiceManager.LastDataEnqueued[ParameterNames.UserLanguage] == language);
-            Assert.IsTrue(mockServiceManager.LastDataEnqueued[ParameterNames.IPOverride] == ipOverride);
+            Assert.IsTrue(mockServiceManager.LastDataEnqueued[ParameterNames.IpOverride] == ipOverride);
             Assert.IsTrue(mockServiceManager.LastDataEnqueued[ParameterNames.AppName] == appName);
             Assert.IsTrue(mockServiceManager.LastDataEnqueued[ParameterNames.AppVersion] == appVersion);
             Assert.IsTrue(mockServiceManager.LastDataEnqueued[ParameterNames.Encoding] == encoding);

@@ -16,14 +16,14 @@ namespace GoogleAnalytics
     /// </summary>
     public sealed class PlatformInfoProvider : IPlatformInfoProvider
     {
-        const string Key_AnonymousClientId = "GoogleAnaltyics.AnonymousClientId";
+        const string KeyAnonymousClientId = "GoogleAnaltyics.AnonymousClientId";
 
-        static string userAgent;
+        static string _userAgent;
 
-        bool windowInitialized = false;
-        string anonymousClientId;
-        Dimensions? viewPortResolution;
-        Dimensions? screenResolution;
+        bool _windowInitialized = false;
+        string _anonymousClientId;
+        Dimensions? _viewPortResolution;
+        Dimensions? _screenResolution;
          
         /// <inheritdoc /> 
         public event EventHandler ViewPortResolutionChanged;
@@ -38,7 +38,7 @@ namespace GoogleAnalytics
         /// <inheritdoc /> 
         public void OnTracking()
         {
-            if (!windowInitialized)
+            if (!_windowInitialized)
             {
                 InitializeWindow();
             }
@@ -49,31 +49,31 @@ namespace GoogleAnalytics
         {
             get
             {
-                if (anonymousClientId == null)
+                if (_anonymousClientId == null)
                 {
                     var appSettings = ApplicationData.Current.LocalSettings;
-                    if (!appSettings.Values.ContainsKey(Key_AnonymousClientId))
+                    if (!appSettings.Values.ContainsKey(KeyAnonymousClientId))
                     {
-                        anonymousClientId = Guid.NewGuid().ToString();
-                        appSettings.Values[Key_AnonymousClientId] = anonymousClientId;
+                        _anonymousClientId = Guid.NewGuid().ToString();
+                        appSettings.Values[KeyAnonymousClientId] = _anonymousClientId;
                     }
                     else
                     {
-                        anonymousClientId = (string)appSettings.Values[Key_AnonymousClientId];
+                        _anonymousClientId = (string)appSettings.Values[KeyAnonymousClientId];
                     }
                 }
-                return anonymousClientId;
+                return _anonymousClientId;
             }
-            set { anonymousClientId = value; }
+            set { _anonymousClientId = value; }
         }
 
         /// <inheritdoc /> 
         public Dimensions? ViewPortResolution
         {
-            get { return viewPortResolution; }
+            get { return _viewPortResolution; }
             private set
             {
-                viewPortResolution = value;
+                _viewPortResolution = value;
                 ViewPortResolutionChanged?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -81,10 +81,10 @@ namespace GoogleAnalytics
         /// <inheritdoc /> 
         public Dimensions? ScreenResolution
         {
-            get { return screenResolution; }
+            get { return _screenResolution; }
             private set
             {
-                screenResolution = value;
+                _screenResolution = value;
                 ScreenResolutionChanged?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -107,11 +107,11 @@ namespace GoogleAnalytics
         {
             get
             {
-                if (userAgent == null)
+                if (_userAgent == null)
                 {
-                    userAgent = GetUserAgent();
+                    _userAgent = GetUserAgent();
                 }
-                return userAgent;
+                return _userAgent;
             }
         }
 
@@ -150,7 +150,7 @@ namespace GoogleAnalytics
                     }
                     ViewPortResolution = new Dimensions((int)bounds.Width, (int)bounds.Height); // leave viewport at the scale unadjusted size
                     Window.Current.SizeChanged += Current_SizeChanged;
-                    windowInitialized = true;
+                    _windowInitialized = true;
                 }
             }
             catch { /* ignore, Bounds may not be ready yet */ }
