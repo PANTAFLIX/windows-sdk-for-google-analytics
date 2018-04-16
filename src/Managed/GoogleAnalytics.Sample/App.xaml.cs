@@ -59,7 +59,7 @@ namespace GoogleAnalytics.Sample
             if (rootFrame.Content == null)
             {
               
-                Tracker = AnalyticsManager.Current.CreateTracker("UA-TEST");
+                Tracker = AnalyticsManager.Current.CreateTracker("UA-TES2");
                 AnalyticsManager.Current.ReportUncaughtExceptions = true;
                 AnalyticsManager.Current.AutoAppLifetimeMonitoring = true;
                     
