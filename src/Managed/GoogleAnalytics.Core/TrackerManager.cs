@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace GoogleAnalytics
 {
@@ -8,27 +7,25 @@ namespace GoogleAnalytics
     /// </summary>
     public class TrackerManager : ServiceManager
     {
-        readonly IPlatformInfoProvider _platformInfoProvider;
-        readonly Dictionary<string, Tracker> _trackers;
+        private readonly IPlatformInfoProvider _platformInfoProvider;
+        private readonly Dictionary<string, Tracker> _trackers;
 
+        /// <inheritdoc />
         /// <summary>
-        /// Instantiates a new instance of <see cref="TrackerManager"/>.
+        /// Instantiates a new instance of <see cref="T:GoogleAnalytics.TrackerManager" />.
         /// </summary>
         /// <param name="platformInfoProvider">An object capable of providing platform and environment specific information.</param>
         public TrackerManager(IPlatformInfoProvider platformInfoProvider)
         {
             _trackers = new Dictionary<string, Tracker>();
-            this._platformInfoProvider = platformInfoProvider;
+            _platformInfoProvider = platformInfoProvider;
             UserAgent = platformInfoProvider.UserAgent;
         }
 
         /// <summary>
         /// Gets the collection of <see cref="Tracker"/> instances.
         /// </summary>
-        protected ICollection<Tracker> Trackers
-        {
-            get { return _trackers.Values; }
-        }
+        protected ICollection<Tracker> Trackers => _trackers.Values;
 
         /// <summary>
         /// Gets or sets the default tracker instance for easy access.
@@ -50,20 +47,14 @@ namespace GoogleAnalytics
         public virtual Tracker CreateTracker(string propertyId)
         {
             propertyId = propertyId ?? string.Empty;
-            if (!_trackers.ContainsKey(propertyId))
+            if (_trackers.ContainsKey(propertyId)) return _trackers[propertyId];
+            var tracker = new Tracker(propertyId, _platformInfoProvider, this);
+            _trackers.Add(propertyId, tracker);
+            if (DefaultTracker == null)
             {
-                var tracker = new Tracker(propertyId, _platformInfoProvider, this);
-                _trackers.Add(propertyId, tracker);
-                if (DefaultTracker == null)
-                {
-                    DefaultTracker = tracker;
-                }
-                return tracker;
+                DefaultTracker = tracker;
             }
-            else
-            {
-                return _trackers[propertyId];
-            }
+            return tracker;
         }
 
         /// <summary>
@@ -82,10 +73,7 @@ namespace GoogleAnalytics
         /// <summary>
         /// Gets the instance of <see cref="IPlatformInfoProvider"/> used by all <see cref="Tracker"/> instances.
         /// </summary>
-        public IPlatformInfoProvider PlatformTrackingInfo
-        {
-            get { return _platformInfoProvider; }
-        }
+        public IPlatformInfoProvider PlatformTrackingInfo => _platformInfoProvider;
 
         /// <inheritdoc/>
         public override void EnqueueHit(IDictionary<string, string> @params)

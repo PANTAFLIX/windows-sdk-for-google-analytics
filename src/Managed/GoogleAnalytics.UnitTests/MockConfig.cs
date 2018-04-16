@@ -9,7 +9,7 @@ namespace GoogleAnalytics.UnitTests
 {
     internal class MockConfig
     {
-        int _randomScreenCount = 10;
+        private int _randomScreenCount = 10;
 
         private Random _random;
         private string _defaultClientId = "me";
@@ -42,26 +42,24 @@ namespace GoogleAnalytics.UnitTests
                 }
                 return _defaultClientId;
             }
-            set {
-                _defaultClientId = value;
-            }
+            set => _defaultClientId = value;
         }
         public string AppName { get; set; }
 
         public string ScreenName
         {
-            get { return (UsesRandomScreenName ? GetRandomScreenName() : _defaultScreenName); }
+            get => (UsesRandomScreenName ? GetRandomScreenName() : _defaultScreenName);
             set { _defaultScreenName = value; }
         }
         public string GetRandomScreenName()
         {
-            int index = _random.Next(0, _randomScreenCount);
+            var index = _random.Next(0, _randomScreenCount);
             return $"{_defaultScreenName}{index:f0}";
         }
 
         public string GetRandomClientId()
         {
-            int index = _random.Next(0, _randomScreenCount);
+            var index = _random.Next(0, _randomScreenCount);
             return $"{_defaultClientId}{index:00}";
         }
 
@@ -75,7 +73,7 @@ namespace GoogleAnalytics.UnitTests
         }
 
 
-        static MockConfig _current;
+        private static MockConfig _current;
         public static MockConfig Current
         {
             get
@@ -84,10 +82,7 @@ namespace GoogleAnalytics.UnitTests
                     _current = GetConfig();
                 return _current;
             }
-            set
-            {
-                _current = value;
-            }
+            set => _current = value;
         }
 
         internal enum RandomNess
@@ -124,14 +119,7 @@ namespace GoogleAnalytics.UnitTests
             }
         }
 
-        public IPlatformInfoProvider PlatformInfoProvider
-        {
-            get
-            {
-                //TODO... make this flexible.. 
-                return new MockPlatformInfoProvider();
-            }            
-        }
+        public IPlatformInfoProvider PlatformInfoProvider => new MockPlatformInfoProvider();
 
         #region MockData 
 

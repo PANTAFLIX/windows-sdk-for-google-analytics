@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Text;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 
 namespace GoogleAnalytics.Sample
 {
-    public sealed partial class MainPage : Page
+    public sealed partial class MainPage
     {
 
-        bool _isRunningInDebugMode; 
+        private bool _isRunningInDebugMode; 
              
         public MainPage()
         {
-            this.InitializeComponent();
-            _isRunningInDebugMode = IsDebugRequest.IsChecked.Value; 
+            InitializeComponent();
+            if (IsDebugRequest.IsChecked != null) _isRunningInDebugMode = IsDebugRequest.IsChecked.Value;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -38,7 +37,7 @@ namespace GoogleAnalytics.Sample
 
         private void AnalyticsManager_HitMalformed(object sender, HitMalformedEventArgs e)
         {
-            Log(e.Hit, $"**Hit Malformed ** {Environment.NewLine} {e.HttpStatusCode.ToString()}");
+            Log(e.Hit, $"**Hit Malformed ** {Environment.NewLine} {e.HttpStatusCode}");
         }
 
         private void AnalyticsManager_HitSent(object sender, HitSentEventArgs e)
@@ -53,12 +52,12 @@ namespace GoogleAnalytics.Sample
 
         private void ButtonEvent_Click(object sender, RoutedEventArgs e)
         {
-            App.Tracker.Send(HitBuilder.CreateCustomEvent("test", "userclick", null, 0).Build());
+            App.Tracker.Send(HitBuilder.CreateCustomEvent("testevent", "userId=7801").Build());
         }
 
         private void ButtonView_Click(object sender, RoutedEventArgs e)
         {
-            App.Tracker.Send(HitBuilder.CreateScreenView().Build());
+            App.Tracker.Send(HitBuilder.CreateScreenView("mainWindow").Build());
         }
 
         private void ButtonSocial_Click(object sender, RoutedEventArgs e)
@@ -74,20 +73,20 @@ namespace GoogleAnalytics.Sample
         private void ButtonThrowException_Click(object sender, RoutedEventArgs e)
         {
             object y = 1;
-            string x = (string)y;
+            var x = (string)y;
         }
 
         private void IsDebugRequest_Checked(object sender, RoutedEventArgs e)
         {
-            _isRunningInDebugMode = IsDebugRequest.IsChecked.Value;
-            Visibility visibility = _isRunningInDebugMode  ? Visibility.Visible : Visibility.Collapsed;
+            if (IsDebugRequest.IsChecked != null) _isRunningInDebugMode = IsDebugRequest.IsChecked.Value;
+            var visibility = _isRunningInDebugMode  ? Visibility.Visible : Visibility.Collapsed;
             RequestPanel.Visibility = visibility;
             ResponsePanel.Visibility = visibility;
 
         }
 
 
-        void Log(Hit hit, string message)
+        private async void Log(Hit hit, string message)
         {
             if (_isRunningInDebugMode)
             {
@@ -103,7 +102,7 @@ namespace GoogleAnalytics.Sample
                 }
                 else
                 {
-                    Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                     {
                         Results.Text = message;
                         Request.Text = Parse(hit);
@@ -115,15 +114,13 @@ namespace GoogleAnalytics.Sample
             System.Diagnostics.Debug.WriteLine(message);
         }
 
-        string Parse(Hit hit)
+        private static string Parse(Hit hit)
         {
-            StringBuilder builder = new StringBuilder();
-            if (hit != null)
+            var builder = new StringBuilder();
+            if (hit == null) return builder.ToString();
+            foreach (var param in hit.Data.Keys)
             {
-                foreach (string param in hit.Data.Keys)
-                {
-                    builder.Append($"{param}:{hit.Data[param]}{Environment.NewLine}");
-                }
+                builder.Append($"{param}:{hit.Data[param]}{Environment.NewLine}");
             }
             return builder.ToString();
         }

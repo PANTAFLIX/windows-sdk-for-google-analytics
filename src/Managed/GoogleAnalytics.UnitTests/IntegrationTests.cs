@@ -78,9 +78,9 @@ namespace GoogleAnalytics.UnitTests
             await SendHitAsync(hit);
         }
 
-        static object _syncObject = new object();
+        private static object _syncObject = new object();
 
-        async Task SendHitAsync(HitBuilder hit)
+        private async Task SendHitAsync(HitBuilder hit)
         {
 
 #if RUN_SYNCHRONOUS
@@ -89,23 +89,28 @@ namespace GoogleAnalytics.UnitTests
 #endif 
             HitSentEventArgs args = null;
 
-            var serviceManager = new AnalyticsManager(MockConfig.Current.PlatformInfoProvider);
-            serviceManager.IsDebug = true;
+            var serviceManager = new AnalyticsManager(MockConfig.Current.PlatformInfoProvider)
+            {
+                IsDebug = true
+            };
             serviceManager.HitSent +=       (s, e) => { args = e;    Assert.IsFalse(args == null);  };
             serviceManager.HitMalformed +=  (s, e) => { Assert.Fail( "Malformed: " + e.Hit.Parse()); };
             serviceManager.HitFailed +=     (s, e) => { Assert.Fail("Failed:" + e.Error); }; 
 
 #if !NATIVESDK_TEST
-                var tracker = new SimpleTracker( MockConfig.Current.PropertyId , serviceManager);
+            var tracker =
+                new SimpleTracker(MockConfig.Current.PropertyId, serviceManager)
+                {
+                    AppName = MockConfig.Current.AppName,
+                    ClientId = MockConfig.Current.ClientId,
+                    ScreenName = MockConfig.Current.ScreenName
+                };
 #else
             var tracker = new Tracker(MockConfig.Current.PropertyId,
                         MockConfig.Current.PlatformInfoProvider, serviceManager);
                 serviceManager.IsDebug = true;
 #endif
-                tracker.AppName = MockConfig.Current.AppName;
-                tracker.ClientId = MockConfig.Current.ClientId;
-                tracker.ScreenName = MockConfig.Current.ScreenName;
-                tracker.Send(hit.Build());
+            tracker.Send(hit.Build());
                 
                 
 #if RUN_SYNCHRONOUS
@@ -140,19 +145,20 @@ namespace GoogleAnalytics.UnitTests
         [TestMethod]
         public async Task SendEventWithDispatcherPeriod()
         {
-            int delay = 4; 
-            TimeSpan ts = TimeSpan.FromSeconds(delay);
+            var delay = 4; 
+            var ts = TimeSpan.FromSeconds(delay);
             HitSentEventArgs args = null;          
             var hit = HitBuilder.CreateCustomEvent("category", "action", "label", 2);
             var serviceManager = new AnalyticsManager(MockConfig.Current.PlatformInfoProvider);
             serviceManager.HitSent += (s, e) => { args = e; };
-            serviceManager.DispatchPeriod = ts;                        
+            serviceManager.DispatchPeriod = ts;
             var tracker = new Tracker(MockConfig.Current.PropertyId,
-            MockConfig.Current.PlatformInfoProvider, serviceManager);
-
-            tracker.AppName = MockConfig.Current.AppName;
-            tracker.ClientId = MockConfig.Current.ClientId;
-            tracker.ScreenName = MockConfig.Current.ScreenName;
+            MockConfig.Current.PlatformInfoProvider, serviceManager)
+            {
+                AppName = MockConfig.Current.AppName,
+                ClientId = MockConfig.Current.ClientId,
+                ScreenName = MockConfig.Current.ScreenName
+            };
 
             tracker.Send(hit.Build()); 
             serviceManager.IsDebug = true;
@@ -260,7 +266,8 @@ namespace GoogleAnalytics.UnitTests
 
             //Ensure it was in proper thread 
             Assert.IsTrue(isUIThread == fireInUIThread );
-#endif          
+#endif
+            await Task.CompletedTask;
         }
 
 

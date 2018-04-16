@@ -9,8 +9,8 @@ namespace GoogleAnalytics
     /// </summary>
     public class SimpleTracker
     {
-        readonly IServiceManager _serviceManager;
-        readonly IDictionary<string, string> _data;
+        private readonly IServiceManager _serviceManager;
+        private readonly IDictionary<string, string> _data;
 
         /// <summary>
         /// Instantiates a new instance of <see cref="Tracker"/>.
@@ -23,7 +23,7 @@ namespace GoogleAnalytics
             if (serviceManager == null) throw new ArgumentNullException(nameof(serviceManager));
 
             _data = new Dictionary<string, string>();
-            this._serviceManager = serviceManager;
+            _serviceManager = serviceManager;
 
             PropertyId = propertyId;
             SampleRate = 100.0F;
@@ -40,7 +40,7 @@ namespace GoogleAnalytics
         /// </summary>
         /// <remarks>Required for all hit types.</remarks>
         /// <seealso href="https://developers.google.com/analytics/devguides/collection/protocol/v1/parameters#tid"/>
-        public string PropertyId { get; private set; }
+        public string PropertyId { get; }
 
         /// <summary>
         /// Gets or sets whether the IP address of the sender will be anonymized.
@@ -329,15 +329,17 @@ namespace GoogleAnalytics
             _data[key] = value;
         }
 
-        IDictionary<string, string> AddRequiredHitData(IDictionary<string, string> @params)
+        private IDictionary<string, string> AddRequiredHitData(IDictionary<string, string> @params)
         {
-            var result = new Dictionary<string, string>();
+            var result = new Dictionary<string, string>
+            {
+                {"v", "1"},
+                {"tid", PropertyId},
+                {"cid", ClientId},
+                {"an", AppName},
+                {"av", AppVersion}
+            };
 
-            result.Add("v", "1");
-            result.Add("tid", PropertyId);
-            result.Add("cid", ClientId);
-            result.Add("an", AppName);
-            result.Add("av", AppVersion);
 
             if (AppId != null) result.Add("aid", AppId);
             if (AppInstallerId != null) result.Add("aiid", AppInstallerId);
@@ -389,26 +391,24 @@ namespace GoogleAnalytics
         /// <remarks>The hit may not be dispatched immediately.</remarks>
         public void Send(IDictionary<string, string> @params)
         {
-            if (!string.IsNullOrEmpty(PropertyId))
+            if (string.IsNullOrEmpty(PropertyId)) return;
+            if (!IsSampledOut())
             {
-                if (!IsSampledOut())
-                {
-                    _serviceManager.EnqueueHit(AddRequiredHitData(@params));
-                }
+                _serviceManager.EnqueueHit(AddRequiredHitData(@params));
             }
         }
 
-        bool IsSampledOut()
+        private bool IsSampledOut()
         {
             if (SampleRate <= 0.0F)
             {
                 return true;
             }
-            else if (SampleRate < 100.0F)
+            if (SampleRate < 100.0F)
             {
                 return ((ClientId != null) && (Math.Abs(ClientId.GetHashCode()) % 10000 >= SampleRate * 100.0F));
             }
-            else return false;
+            return false;
         }
     }
 }

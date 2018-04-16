@@ -23,7 +23,7 @@ IF %ERRORLEVEL% NEQ 0 (
 SET PACKAGENAME=UWP.SDKforGoogleAnalytics.Managed
 SET /p VERSION=<VERSION
 SET BIN=bin
-SET OUTDIR=..\..\src\Managed\bin
+SET OUTDIR=..\..\src\Managed\bin\x64\Release
  
 
 IF NOT "%1" == "" (

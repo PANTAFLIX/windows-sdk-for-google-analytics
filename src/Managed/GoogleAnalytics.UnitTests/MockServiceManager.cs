@@ -13,7 +13,7 @@ namespace GoogleAnalytics.UnitTests
 
         public void EnumerateDataEnqueed ( )
         {
-            foreach ( string key in LastDataEnqueued.Keys  )
+            foreach ( var key in LastDataEnqueued.Keys  )
             {
                 System.Diagnostics.Debug.WriteLine( $"{key}='{LastDataEnqueued[key]}'"); 
             }

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>GoogleAnalytics</RootNamespace>
+    <AssemblyName>GoogleAnalytics.Core</AssemblyName>
+    <Version>1.6.0</Version>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <PlatformTarget>x64</PlatformTarget>
+    <DocumentationFile>bin\Release\netstandard2.0\GoogleAnalytics.Core.xml</DocumentationFile>
+  </PropertyGroup>
+
+</Project>

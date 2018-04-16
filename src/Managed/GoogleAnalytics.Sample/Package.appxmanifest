@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap mp">
-  <Identity Name="2ec26bec-8977-490d-ab91-da6243a8c6aa" Publisher="CN=GoogleAnalytics.Sample.Managed_TemporaryKey" Version="1.0.0.0" />
+  <Identity Name="2ec26bec-8977-490d-ab91-da6243a8c6aa" Publisher="CN=Microsoft Corporation" Version="1.6.0.0" />
   <mp:PhoneIdentity PhoneProductId="2ec26bec-8977-490d-ab91-da6243a8c6aa" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>GoogleAnalytics.Sample</DisplayName>

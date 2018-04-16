@@ -7,12 +7,12 @@ using Windows.Foundation;
 
 namespace GoogleAnalytics.UnitTests
 {
-    static class Extensions
+    internal static class Extensions
     {
         public static string Parse(this Hit hit)
         {
-            StringBuilder builder = new StringBuilder();            
-            foreach (string param in hit.Data.Keys)
+            var builder = new StringBuilder();            
+            foreach (var param in hit.Data.Keys)
             {
                 builder.Append($"{param}:{hit.Data[param]}&");
             }             
@@ -21,9 +21,9 @@ namespace GoogleAnalytics.UnitTests
 
         public static string BuildToString (this HitBuilder hitBuilder )
         {
-            StringBuilder builder = new StringBuilder();
+            var builder = new StringBuilder();
             var all = hitBuilder.Build();
-            foreach (string key in all.Keys)
+            foreach (var key in all.Keys)
             {
                 builder.Append($"{key}:{all[key]}&");
             }             
@@ -32,7 +32,7 @@ namespace GoogleAnalytics.UnitTests
 
         public static string FindParamInQueryString ( this string hit , string param )
         {
-            WwwFormUrlDecoder decoder = new WwwFormUrlDecoder(hit);
+            var decoder = new WwwFormUrlDecoder(hit);
             return decoder.GetFirstValueByName(param);              
         }
     }

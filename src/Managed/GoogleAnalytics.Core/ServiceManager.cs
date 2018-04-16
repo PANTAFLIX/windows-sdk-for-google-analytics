@@ -12,19 +12,19 @@ namespace GoogleAnalytics
     /// </summary>
     public class ServiceManager : IServiceManager
     {
-        static Random _random;
-        static readonly Uri EndPointUnsecureDebug = new Uri("http://www.google-analytics.com/debug/collect");
-        static readonly Uri EndPointSecureDebug = new Uri("https://ssl.google-analytics.com/debug/collect");
-        static readonly Uri EndPointUnsecure = new Uri("http://www.google-analytics.com/collect");
-        static readonly Uri EndPointSecure = new Uri("https://ssl.google-analytics.com/collect");
+        private static Random _random;
+        private static readonly Uri EndPointUnsecureDebug = new Uri("http://www.google-analytics.com/debug/collect");
+        private static readonly Uri EndPointSecureDebug = new Uri("https://ssl.google-analytics.com/debug/collect");
+        private static readonly Uri EndPointUnsecure = new Uri("http://www.google-analytics.com/collect");
+        private static readonly Uri EndPointSecure = new Uri("https://ssl.google-analytics.com/collect");
 
-        readonly Queue<Hit> _hits;
-        readonly IList<Task> _dispatchingTasks;
-        readonly TokenBucket _hitTokenBucket;
+        private readonly Queue<Hit> _hits;
+        private readonly IList<Task> _dispatchingTasks;
+        private readonly TokenBucket _hitTokenBucket;
 
-        Timer _timer;
-        TimeSpan _dispatchPeriod;
-        bool _isEnabled = true;
+        private Timer _timer;
+        private TimeSpan _dispatchPeriod;
+        private bool _isEnabled = true;
 
         /// <summary>
         /// Provides notification that a <see cref="Hit"/> has been been successfully sent.
@@ -91,21 +91,19 @@ namespace GoogleAnalytics
         /// <remarks>Setting to TimeSpan.Zero will cause the hit to get sent immediately.</remarks>
         public TimeSpan DispatchPeriod
         {
-            get { return _dispatchPeriod; }
+            get => _dispatchPeriod;
             set
             {
-                if (_dispatchPeriod != value)
+                if (_dispatchPeriod == value) return;
+                _dispatchPeriod = value;
+                if (_timer != null)
                 {
-                    _dispatchPeriod = value;
-                    if (_timer != null)
-                    {
-                        _timer.Dispose();
-                        _timer = null;
-                    }
-                    if (_dispatchPeriod > TimeSpan.Zero)
-                    {
-                        _timer = new Timer(timer_Tick, null, DispatchPeriod, DispatchPeriod);
-                    }
+                    _timer.Dispose();
+                    _timer = null;
+                }
+                if (_dispatchPeriod > TimeSpan.Zero)
+                {
+                    _timer = new Timer(timer_Tick, null, DispatchPeriod, DispatchPeriod);
                 }
             }
         }
@@ -116,19 +114,15 @@ namespace GoogleAnalytics
         /// <remarks>Typically this is used to indicate whether or not the network is available.</remarks>
         public bool IsEnabled
         {
-            get { return _isEnabled; }
+            get => _isEnabled;
             set
             {
-                if (_isEnabled != value)
+                if (_isEnabled == value) return;
+                _isEnabled = value;
+                if (!_isEnabled) return;
+                if (DispatchPeriod >= TimeSpan.Zero)
                 {
-                    _isEnabled = value;
-                    if (_isEnabled)
-                    {
-                        if (DispatchPeriod >= TimeSpan.Zero)
-                        {
-                            var nowait = DispatchAsync();
-                        }
-                    }
+                    var nowait = DispatchAsync();
                 }
             }
         }
@@ -225,12 +219,12 @@ namespace GoogleAnalytics
             }
         }
 
-        async void timer_Tick(object sender)
+        private async void timer_Tick(object sender)
         {
             await DispatchAsync();
         }
 
-        async Task RunDispatchingTask(Task newDispatchingTask)
+        private async Task RunDispatchingTask(Task newDispatchingTask)
         {
             lock (_dispatchingTasks)
             {
@@ -249,7 +243,7 @@ namespace GoogleAnalytics
             }
         }
 
-        async Task DispatchQueuedHits(IEnumerable<Hit> hits)
+        private async Task DispatchQueuedHits(IEnumerable<Hit> hits)
         {
             using (var httpClient = GetHttpClient())
             {
@@ -267,14 +261,14 @@ namespace GoogleAnalytics
                     {
                         lock (hits) // add back to queue
                         {
-                            this._hits.Enqueue(hit);
+                            _hits.Enqueue(hit);
                         }
                     }
                 }
             }
         }
 
-        async Task DispatchImmediateHit(Hit hit)
+        private async Task DispatchImmediateHit(Hit hit)
         {
             using (var httpClient = GetHttpClient())
             {
@@ -284,7 +278,7 @@ namespace GoogleAnalytics
             }
         }
 
-        async Task DispatchHitData(Hit hit, HttpClient httpClient, IDictionary<string, string> hitData)
+        private async Task DispatchHitData(Hit hit, HttpClient httpClient, IDictionary<string, string> hitData)
         {
             if (BustCache) hitData.Add("z", GetCacheBuster());
             try
@@ -308,38 +302,33 @@ namespace GoogleAnalytics
             }
         }
 
-        async Task<HttpResponseMessage> SendHitAsync(Hit hit, HttpClient httpClient, IDictionary<string, string> hitData)
+        private async Task<HttpResponseMessage> SendHitAsync(Hit hit, HttpClient httpClient, IDictionary<string, string> hitData)
         {
             var endPoint = IsDebug ? (IsSecure ? EndPointSecureDebug : EndPointUnsecureDebug) : (IsSecure ? EndPointSecure : EndPointUnsecure);
-            if (PostData)
+            if (!PostData) return await httpClient.GetAsync(endPoint + "?" + GetUrlEncodedString(hitData));
+
+            using (var content = GetEncodedContent(hitData))
             {
-                using (var content = GetEncodedContent(hitData))
-                {
-                    return await httpClient.PostAsync(endPoint, content);
-                }
-            }
-            else
-            {
-                return await httpClient.GetAsync(endPoint + "?" + GetUrlEncodedString(hitData));
+                return await httpClient.PostAsync(endPoint, content);
             }
         }
 
-        void OnHitMalformed(Hit hit, HttpResponseMessage response)
+        private void OnHitMalformed(Hit hit, HttpResponseMessage response)
         {
             HitMalformed?.Invoke(this, new HitMalformedEventArgs(hit, (int)response.StatusCode));
         }
 
-        void OnHitFailed(Hit hit, Exception exception)
+        private void OnHitFailed(Hit hit, Exception exception)
         {
             HitFailed?.Invoke(this, new HitFailedEventArgs(hit, exception));
         }
 
-        async Task OnHitSentAsync(Hit hit, HttpResponseMessage response)
+        private async Task OnHitSentAsync(Hit hit, HttpResponseMessage response)
         {
             HitSent?.Invoke(this, new HitSentEventArgs(hit, await response.Content.ReadAsStringAsync()));
         }
 
-        HttpClient GetHttpClient()
+        private HttpClient GetHttpClient()
         {
             var result = new HttpClient();
             if (!string.IsNullOrEmpty(UserAgent))
@@ -349,7 +338,7 @@ namespace GoogleAnalytics
             return result;
         }
 
-        static string GetCacheBuster()
+        private static string GetCacheBuster()
         {
             if (_random == null)
             {
@@ -358,12 +347,12 @@ namespace GoogleAnalytics
             return _random.Next().ToString();
         }
 
-        static ByteArrayContent GetEncodedContent(IEnumerable<KeyValuePair<string, string>> nameValueCollection)
+        private static ByteArrayContent GetEncodedContent(IEnumerable<KeyValuePair<string, string>> nameValueCollection)
         {
             return new StringContent(GetUrlEncodedString(nameValueCollection));
         }
 
-        static string GetUrlEncodedString(IEnumerable<KeyValuePair<string, string>> nameValueCollection)
+        private static string GetUrlEncodedString(IEnumerable<KeyValuePair<string, string>> nameValueCollection)
         {
             const int maxUriStringSize = 65519;
 

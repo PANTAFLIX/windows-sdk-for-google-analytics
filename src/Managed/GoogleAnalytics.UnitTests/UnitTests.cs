@@ -116,7 +116,7 @@ namespace GoogleAnalytics.UnitTests
         public void MockPlatformInfoTest()
         {
             IPlatformInfoProvider platformInfo = new MockPlatformInfoProvider();
-            MockServiceManager mockServiceManager = new MockServiceManager();
+            var mockServiceManager = new MockServiceManager();
             RunPlatformInfoTest("fakePropertyId", ref platformInfo, ref mockServiceManager);
 
         }
@@ -135,7 +135,7 @@ namespace GoogleAnalytics.UnitTests
             initializeWindowTask.Wait();
             if (platformInfo != null)
             {
-                MockServiceManager mockServiceManager = new MockServiceManager();
+                var mockServiceManager = new MockServiceManager();
                 RunPlatformInfoTest("fakePropertyId", ref platformInfo, ref mockServiceManager);
             }
             else
@@ -143,7 +143,8 @@ namespace GoogleAnalytics.UnitTests
         }
 
         #region Helpers 
-        static void RunPlatformInfoTest(string propertyId, ref IPlatformInfoProvider platformInfoProvider,
+
+        private static void RunPlatformInfoTest(string propertyId, ref IPlatformInfoProvider platformInfoProvider,
             ref MockServiceManager mockServiceManager)
         {
             var tracker = new Tracker(propertyId, platformInfoProvider, mockServiceManager);

@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoogleAnalytics.UnitTests",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoogleAnalytics.Sample.Managed", "GoogleAnalytics.Sample\GoogleAnalytics.Sample.Managed.csproj", "{82A33996-59A5-4CA8-BED7-7EDC914B42EF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GoogleAnalytics.Core", "GoogleAnalytics.Cor\GoogleAnalytics.Core.csproj", "{F8D30F8E-2A54-46E4-9927-7D9A7FDB5A7D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GoogleAnalytics.Core", "GoogleAnalytics.Core\GoogleAnalytics.Core.csproj", "{F8D30F8E-2A54-46E4-9927-7D9A7FDB5A7D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

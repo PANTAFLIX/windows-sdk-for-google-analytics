@@ -19,12 +19,20 @@ The implementation supports:
 - [Cache Busting](https://developers.google.com/analytics/devguides/collection/protocol/v1/parameters#z)  
 - [Dispatching (periodic and manual)](https://developers.google.com/analytics/devguides/collection/protocol/v1/parameters#qt)  
  
-
 ## Getting Started 
 Please read our [Getting Started ](https://github.com/dotnet/windows-sdk-for-google-analytics/wiki/Getting-Started) page for detailed information on pre-requisites, samples, and getting the nuget packages for the SDK.  
 
- 
 ## Release notes/Update history:
+**v1.6.0.0. April 2018** - This is our initial release, though this SDK is an iteration on the prior project on [github](https://github.com/dotnet/windows-sdk-for-google-analytics).
+
+**BREAKING CHANGES** 
+- If this managed SDK is used along with the Universal App Platform, this SDK version, since it is based on .net standard 2.0 and is compatible to .net core 2.x only works with _*Microsoft.NETCore.UniversalWindowsPlatform 6.x*_ or higher, which implies, that only Windows 10 Fall Creators Update _*10.0.16299*_ or higher is supported
+
+**GENERAL CHANGES** 
+- Changed the portable class library (PCL) _*GoogleAnalytics.Core*_ to a more modern .net standard 2.0 class library. 
+- Rewrote a lot of classes, to be compatible with .net core 2.x projects
+
+
 **v1.5.0.0. Feb 2017**. This is our initial release, though our SDK is an iteration on this prior project on [codeplex](http://googleanalyticssdk.codeplex.com/). 
 - Please see supported features above.  
 - Converged the APIs so that the C# and WinRT SDKs would be seamless. In the convergence, we deprecated a few features from old SDK (in codeplex), so look at our FAQ, for porting your code from older SDK to this one. 

@@ -16,20 +16,23 @@ namespace GoogleAnalytics
     /// </summary>
     public sealed class PlatformInfoProvider : IPlatformInfoProvider
     {
-        const string KeyAnonymousClientId = "GoogleAnaltyics.AnonymousClientId";
+        private const string KeyAnonymousClientId = "GoogleAnaltyics.AnonymousClientId";
 
-        static string _userAgent;
+        private static string _userAgent;
 
-        bool _windowInitialized = false;
-        string _anonymousClientId;
-        Dimensions? _viewPortResolution;
-        Dimensions? _screenResolution;
+        private bool _windowInitialized;
+        private string _anonymousClientId;
+        private Dimensions? _viewPortResolution;
+        private Dimensions? _screenResolution;
          
         /// <inheritdoc /> 
         public event EventHandler ViewPortResolutionChanged;
         /// <inheritdoc /> 
         public event EventHandler ScreenResolutionChanged;
 
+        /// <summary>
+        /// 
+        /// </summary>
         public PlatformInfoProvider()
         {
             InitializeWindow();
@@ -49,28 +52,26 @@ namespace GoogleAnalytics
         {
             get
             {
-                if (_anonymousClientId == null)
+                if (_anonymousClientId != null) return _anonymousClientId;
+                var appSettings = ApplicationData.Current.LocalSettings;
+                if (!appSettings.Values.ContainsKey(KeyAnonymousClientId))
                 {
-                    var appSettings = ApplicationData.Current.LocalSettings;
-                    if (!appSettings.Values.ContainsKey(KeyAnonymousClientId))
-                    {
-                        _anonymousClientId = Guid.NewGuid().ToString();
-                        appSettings.Values[KeyAnonymousClientId] = _anonymousClientId;
-                    }
-                    else
-                    {
-                        _anonymousClientId = (string)appSettings.Values[KeyAnonymousClientId];
-                    }
+                    _anonymousClientId = Guid.NewGuid().ToString();
+                    appSettings.Values[KeyAnonymousClientId] = _anonymousClientId;
+                }
+                else
+                {
+                    _anonymousClientId = (string)appSettings.Values[KeyAnonymousClientId];
                 }
                 return _anonymousClientId;
             }
-            set { _anonymousClientId = value; }
+            set => _anonymousClientId = value;
         }
 
         /// <inheritdoc /> 
         public Dimensions? ViewPortResolution
         {
-            get { return _viewPortResolution; }
+            get => _viewPortResolution;
             private set
             {
                 _viewPortResolution = value;
@@ -81,7 +82,7 @@ namespace GoogleAnalytics
         /// <inheritdoc /> 
         public Dimensions? ScreenResolution
         {
-            get { return _screenResolution; }
+            get => _screenResolution;
             private set
             {
                 _screenResolution = value;
@@ -90,87 +91,63 @@ namespace GoogleAnalytics
         }
 
         /// <inheritdoc /> 
-        public string UserLanguage
-        {
-            get { return System.Globalization.CultureInfo.CurrentUICulture.Name; }
-        }
+        public string UserLanguage => System.Globalization.CultureInfo.CurrentUICulture.Name;
 
         /// <inheritdoc /> 
         /// <remarks>This feature not implemented on this UWP implementation </remarks>
-        public int? ScreenColors
-        {
-            get { return null; }
-        }
+        public int? ScreenColors => null;
 
         /// <inheritdoc /> 
-        public string UserAgent
-        {
-            get
-            {
-                if (_userAgent == null)
-                {
-                    _userAgent = GetUserAgent();
-                }
-                return _userAgent;
-            }
-        }
+        public string UserAgent => _userAgent ?? (_userAgent = GetUserAgent());
 
-        void InitializeWindow()
+        private void InitializeWindow()
         {
             try
             {
-                if (Window.Current != null && Window.Current.Content != null)
+                if (Window.Current == null || Window.Current.Content == null) return;
+
+                var bounds = Window.Current.Bounds;
+                double w, h;
+                var pointerDevice = PointerDevice.GetPointerDevices().FirstOrDefault();
+                if (pointerDevice != null)
                 {
-                    var bounds = Window.Current.Bounds;
-                    double w, h;
-                    var pointerDevice = PointerDevice.GetPointerDevices().FirstOrDefault();
-                    if (pointerDevice != null)
-                    {
-                        w = pointerDevice.ScreenRect.Width;
-                        h = pointerDevice.ScreenRect.Height;
-                    }
-                    else
-                    {
-                        w = bounds.Width;
-                        h = bounds.Height;
-                    }
-
-                    var displayInfo = DisplayInformation.GetForCurrentView();
-                    var scale = (double)(int)displayInfo.ResolutionScale / 100d;
-                    w = Math.Round(w * scale);
-                    h = Math.Round(h * scale);
-
-                    if ((displayInfo.NativeOrientation & DisplayOrientations.Landscape) == DisplayOrientations.Landscape)
-                    {
-                        ScreenResolution = new Dimensions((int)w, (int)h);
-                    }
-                    else // portrait
-                    {
-                        ScreenResolution = new Dimensions((int)h, (int)w);
-                    }
-                    ViewPortResolution = new Dimensions((int)bounds.Width, (int)bounds.Height); // leave viewport at the scale unadjusted size
-                    Window.Current.SizeChanged += Current_SizeChanged;
-                    _windowInitialized = true;
+                    w = pointerDevice.ScreenRect.Width;
+                    h = pointerDevice.ScreenRect.Height;
                 }
+                else
+                {
+                    w = bounds.Width;
+                    h = bounds.Height;
+                }
+
+                var displayInfo = DisplayInformation.GetForCurrentView();
+                var scale = (double)(int)displayInfo.ResolutionScale / 100d;
+                w = Math.Round(w * scale);
+                h = Math.Round(h * scale);
+
+                ScreenResolution = (displayInfo.NativeOrientation & DisplayOrientations.Landscape) == DisplayOrientations.Landscape ? new Dimensions((int)w, (int)h) : new Dimensions((int)h, (int)w);
+                ViewPortResolution = new Dimensions((int)bounds.Width, (int)bounds.Height); // leave viewport at the scale unadjusted size
+                Window.Current.SizeChanged += Current_SizeChanged;
+                _windowInitialized = true;
             }
             catch { /* ignore, Bounds may not be ready yet */ }
         }
 
-        void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
+        private void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
         {
             ViewPortResolution = new Dimensions((int)e.Size.Width, (int)e.Size.Height);
         }
 
-        static string GetUserAgent()
+        private static string GetUserAgent()
         {
             var sysInfo = new Windows.Security.ExchangeActiveSyncProvisioning.EasClientDeviceInformation();
             var ai = AnalyticsInfo.VersionInfo;
-            string sv = ai.DeviceFamilyVersion;
-            ulong v = ulong.Parse(sv);
-            ulong v1 = (v & 0xFFFF000000000000L) >> 48;
-            ulong v2 = (v & 0x0000FFFF00000000L) >> 32;
+            var sv = ai.DeviceFamilyVersion;
+            var v = ulong.Parse(sv);
+            var v1 = (v & 0xFFFF000000000000L) >> 48;
+            var v2 = (v & 0x0000FFFF00000000L) >> 32;
 
-            string systemVersion = $"{v1}.{v2}";
+            var systemVersion = $"{v1}.{v2}";
 
             switch (ai.DeviceFamily)
             {
@@ -178,7 +155,8 @@ namespace GoogleAnalytics
                     // Edge: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15014
                     // This: Mozilla/5.0 (Windows NT 10.0; Win64; X64; Microsoft Corporation; Surface Pro 4)
 
-                    String uaArchitecture;
+                    string uaArchitecture;
+
                     switch (Package.Current.Id.Architecture)
                     {
                         case ProcessorArchitecture.X64:
@@ -190,6 +168,10 @@ namespace GoogleAnalytics
                         case ProcessorArchitecture.Arm:
                             uaArchitecture = "ARM";
                             break;
+                        case ProcessorArchitecture.Neutral:
+                            throw new NotImplementedException();
+                        case ProcessorArchitecture.Unknown:
+                            throw new NotImplementedException();
                         default:
                             uaArchitecture = "Win64; X64";
                             break;

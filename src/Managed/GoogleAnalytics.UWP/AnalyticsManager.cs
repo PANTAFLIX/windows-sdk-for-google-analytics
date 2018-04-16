@@ -15,7 +15,7 @@ namespace GoogleAnalytics
     {
         private const string KeyAppOptOut = "GoogleAnaltyics.AppOptOut";
 
-        static AnalyticsManager _current;
+        private static AnalyticsManager _current;
 
         private bool _isAppOptOutSet;
         private readonly Application _application;
@@ -31,8 +31,8 @@ namespace GoogleAnalytics
         {
             _application = Application.Current; 
         }
-        
-        AnalyticsManager(Application application) : base(new PlatformInfoProvider())
+
+        private AnalyticsManager(Application application) : base(new PlatformInfoProvider())
         {
             this._application = application;
         }
@@ -40,17 +40,7 @@ namespace GoogleAnalytics
         /// <summary>
         /// Shared, singleton instance of AnalyticsManager 
         /// </summary>
-        public static AnalyticsManager Current
-        {
-            get
-            {
-                if (_current == null)
-                {
-                    _current = new AnalyticsManager(Application.Current);
-                }
-                return _current;
-            }
-        }
+        public static AnalyticsManager Current => _current ?? (_current = new AnalyticsManager(Application.Current));
 
         /// <summary>
         /// True when the user has opted out of analytics, this disables all tracking activities.
@@ -77,25 +67,20 @@ namespace GoogleAnalytics
         /// </summary>
         public bool ReportUncaughtExceptions
         {
-            get
-            {
-                return _reportUncaughtExceptions;
-            }
+            get => _reportUncaughtExceptions;
             set
             {
-                if (_reportUncaughtExceptions != value)
+                if (_reportUncaughtExceptions == value) return;
+                _reportUncaughtExceptions = value;
+                if (_reportUncaughtExceptions)
                 {
-                    _reportUncaughtExceptions = value;
-                    if (_reportUncaughtExceptions)
-                    {
-                        TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
-                        CoreApplication.UnhandledErrorDetected += CoreApplication_UnhandledErrorDetected;
-                    }
-                    else
-                    {
-                        TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
-                        CoreApplication.UnhandledErrorDetected -= CoreApplication_UnhandledErrorDetected;
-                    }
+                    TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+                    CoreApplication.UnhandledErrorDetected += CoreApplication_UnhandledErrorDetected;
+                }
+                else
+                {
+                    TaskScheduler.UnobservedTaskException -= TaskScheduler_UnobservedTaskException;
+                    CoreApplication.UnhandledErrorDetected -= CoreApplication_UnhandledErrorDetected;
                 }
             }
         }
@@ -107,25 +92,20 @@ namespace GoogleAnalytics
         /// </remarks>
         public bool AutoAppLifetimeMonitoring
         {
-            get
-            {
-                return _autoAppLifetimeMonitoring;
-            }
+            get => _autoAppLifetimeMonitoring;
             set
             {
-                if (_autoAppLifetimeMonitoring != value)
+                if (_autoAppLifetimeMonitoring == value) return;
+                _autoAppLifetimeMonitoring = value;
+                if (_autoAppLifetimeMonitoring)
                 {
-                    _autoAppLifetimeMonitoring = value;
-                    if (_autoAppLifetimeMonitoring)
-                    {
-                        _application.Suspending += Application_Suspending;
-                        _application.Resuming += Application_Resuming;
-                    }
-                    else
-                    {
-                        _application.Suspending -= Application_Suspending;
-                        _application.Resuming -= Application_Resuming;
-                    }
+                    _application.Suspending += Application_Suspending;
+                    _application.Resuming += Application_Resuming;
+                }
+                else
+                {
+                    _application.Suspending -= Application_Suspending;
+                    _application.Resuming -= Application_Resuming;
                 }
             }
         }
@@ -135,25 +115,20 @@ namespace GoogleAnalytics
         /// </summary>
         public bool AutoTrackNetworkConnectivity
         {
-            get
-            {
-                return _autoTrackNetworkConnectivity;
-            }
+            get => _autoTrackNetworkConnectivity;
             set
             {
-                if (_autoTrackNetworkConnectivity != value)
+                if (_autoTrackNetworkConnectivity == value) return;
+                _autoTrackNetworkConnectivity = value;
+                if (_autoTrackNetworkConnectivity)
                 {
-                    _autoTrackNetworkConnectivity = value;
-                    if (_autoTrackNetworkConnectivity)
-                    {
-                        UpdateConnectionStatus();
-                        NetworkInformation.NetworkStatusChanged += NetworkInformation_NetworkStatusChanged;
-                    }
-                    else
-                    {
-                        NetworkInformation.NetworkStatusChanged -= NetworkInformation_NetworkStatusChanged;
-                        base.IsEnabled = true;
-                    }
+                    UpdateConnectionStatus();
+                    NetworkInformation.NetworkStatusChanged += NetworkInformation_NetworkStatusChanged;
+                }
+                else
+                {
+                    NetworkInformation.NetworkStatusChanged -= NetworkInformation_NetworkStatusChanged;
+                    base.IsEnabled = true;
                 }
             }
         }
@@ -174,7 +149,7 @@ namespace GoogleAnalytics
             return tracker;
         }
 
-        void LoadAppOptOut()
+        private void LoadAppOptOut()
         {
             if (ApplicationData.Current.LocalSettings.Values.ContainsKey(KeyAppOptOut))
             {
@@ -187,35 +162,38 @@ namespace GoogleAnalytics
             _isAppOptOutSet = true;
         }
 
-        void NetworkInformation_NetworkStatusChanged(object sender)
+        private void NetworkInformation_NetworkStatusChanged(object sender)
         {
             UpdateConnectionStatus();
         }
 
-        void UpdateConnectionStatus()
+        private void UpdateConnectionStatus()
         {
             var profile = NetworkInformation.GetInternetConnectionProfile();
-            if (profile != null)
+            if (profile == null) return;
+
+            switch (profile.GetNetworkConnectivityLevel())
             {
-                switch (profile.GetNetworkConnectivityLevel())
-                {
-                    case NetworkConnectivityLevel.InternetAccess:
-                    case NetworkConnectivityLevel.ConstrainedInternetAccess:
-                        IsEnabled = true;
-                        break;
-                    default:
-                        IsEnabled = false;
-                        break;
-                }
+                case NetworkConnectivityLevel.InternetAccess:
+                case NetworkConnectivityLevel.ConstrainedInternetAccess:
+                    IsEnabled = true;
+                    break;
+                case NetworkConnectivityLevel.None:
+                    throw new NotImplementedException();
+                case NetworkConnectivityLevel.LocalAccess:
+                    throw new NotImplementedException();
+                default:
+                    IsEnabled = false;
+                    break;
             }
         }
 
-        void Application_Resuming(object sender, object e)
+        private void Application_Resuming(object sender, object e)
         {
             Resume();
         }
 
-        async void Application_Suspending(object sender, SuspendingEventArgs e)
+        private async void Application_Suspending(object sender, SuspendingEventArgs e)
         {
             var deferral = e.SuspendingOperation.GetDeferral();
             try
@@ -228,7 +206,7 @@ namespace GoogleAnalytics
             }
         }
 
-        void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+        private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
             var ex = e.Exception.InnerException ?? e.Exception; // inner exception contains better info for unobserved tasks
             foreach (var tracker in Trackers)
@@ -237,7 +215,7 @@ namespace GoogleAnalytics
             }
         }
 
-        void CoreApplication_UnhandledErrorDetected(object sender, UnhandledErrorDetectedEventArgs e)
+        private void CoreApplication_UnhandledErrorDetected(object sender, UnhandledErrorDetectedEventArgs e)
         {
             try
             {

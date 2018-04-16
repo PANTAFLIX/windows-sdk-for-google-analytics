@@ -8,8 +8,8 @@ namespace GoogleAnalytics.UnitTests
     /// </summary>
     public sealed class MockPlatformInfoProvider : IPlatformInfoProvider
     {
-        Dimensions? _viewPortResolution;
-        Dimensions? _screenResolution;
+        private Dimensions? _viewPortResolution;
+        private Dimensions? _screenResolution;
 
 
 #if NATIVESDK_TEST        
@@ -58,7 +58,7 @@ namespace GoogleAnalytics.UnitTests
         /// <inheritdoc/>
         public Dimensions? ScreenResolution
         {
-            get { return _screenResolution; }
+            get => _screenResolution;
             set
             {
                 _screenResolution = value;
@@ -69,7 +69,7 @@ namespace GoogleAnalytics.UnitTests
         /// <inheritdoc/>
         public Dimensions? ViewPortResolution
         {
-            get { return _viewPortResolution; }
+            get => _viewPortResolution;
             set
             {
                 _viewPortResolution = value;

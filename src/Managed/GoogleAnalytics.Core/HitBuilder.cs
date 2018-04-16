@@ -9,41 +9,47 @@ namespace GoogleAnalytics
     /// </summary>
     public sealed class HitBuilder
     {
-        const string HitTypeScreenview = "screenview";
-        const string HitTypeEvent = "event";
-        const string HitTypeException = "exception";
-        const string HitTypeSocialNetworkInteraction = "social";
-        const string HitTypeUserTiming = "timing";
+        private const string HitTypeScreenview = "screenview";
+        private const string HitTypeEvent = "event";
+        private const string HitTypeException = "exception";
+        private const string HitTypeSocialNetworkInteraction = "social";
+        private const string HitTypeUserTiming = "timing";
 
-        readonly IList<HitBuilder> _lineage;
-        readonly IDictionary<string, string> _data;
+        private readonly IList<HitBuilder> _lineage;
+        private readonly IDictionary<string, string> _data;
 
-        private IDictionary<string, string> Data { get { return _data; } }
+        private IDictionary<string, string> Data => _data;
         private int ProductCount { get; set; }
         private int PromotionCount { get; set; }
 
         private HitBuilder()
         {
-            _lineage = new List<HitBuilder>();
-            _lineage.Add(this);
+            _lineage = new List<HitBuilder>
+            {
+                this
+            };
 
             _data = new Dictionary<string, string>();
         }
 
         private HitBuilder(IDictionary<string, string> data)
         {
-            this._lineage = new List<HitBuilder>();
-            this._lineage.Add(this);
+            _lineage = new List<HitBuilder>
+            {
+                this
+            };
 
-            this._data = new Dictionary<string, string>(data);
+            _data = new Dictionary<string, string>(data);
         }
 
         private HitBuilder(IList<HitBuilder> lineage, IDictionary<string, string> data)
         {
-            this._lineage = new List<HitBuilder>(lineage);
-            this._lineage.Add(this);
+            _lineage = new List<HitBuilder>(lineage)
+            {
+                this
+            };
 
-            this._data = new Dictionary<string, string>(data);
+            _data = new Dictionary<string, string>(data);
         }
         
         /// <summary>
@@ -58,10 +64,12 @@ namespace GoogleAnalytics
             if (category == null) throw new ArgumentNullException(nameof(category));
             if (action == null) throw new ArgumentNullException(nameof(action));
 
-            var data = new Dictionary<string, string>();
-            data.Add("t", HitTypeEvent);
-            data.Add("ec", category);
-            data.Add("ea", action);
+            var data = new Dictionary<string, string>
+            {
+                { "t", HitTypeEvent },
+                { "ec", category },
+                { "ea", action }
+            };
             if (label != null) data.Add("el", label);
             if (value != 0L) data.Add("ev", value.ToString(CultureInfo.InvariantCulture));
             return new HitBuilder(data);
@@ -76,8 +84,10 @@ namespace GoogleAnalytics
         {
             if (description == null) throw new ArgumentNullException(nameof(description));
 
-            var data = new Dictionary<string, string>();
-            data.Add("t", HitTypeException);
+            var data = new Dictionary<string, string>
+            {
+                { "t", HitTypeException }
+            };
             if (description != null) data.Add("exd", description);
             if (!isFatal) data.Add("exf", "0");
             return new HitBuilder(data);
@@ -89,8 +99,7 @@ namespace GoogleAnalytics
         /// <param name="screenName">Specifies the 'Screen Name' of the screenview hit. Note: this will not affect subsequent hits. To do this, set the ScreenName property on the <see cref="Tracker"/> instead.</param>
         public static HitBuilder CreateScreenView(string screenName = null)
         {
-            var data = new Dictionary<string, string>();
-            data.Add("t", HitTypeScreenview);
+            var data = new Dictionary<string, string> {{"t", HitTypeScreenview}};
             if (screenName != null) data.Add("cd", screenName);
             return new HitBuilder(data);
         }
@@ -107,11 +116,13 @@ namespace GoogleAnalytics
             if (action == null) throw new ArgumentNullException(nameof(action));
             if (target == null) throw new ArgumentNullException(nameof(target));
 
-            var data = new Dictionary<string, string>();
-            data.Add("t", HitTypeSocialNetworkInteraction);
-            data.Add("sn", network);
-            data.Add("sa", action);
-            data.Add("st", target);
+            var data = new Dictionary<string, string>
+            {
+                {"t", HitTypeSocialNetworkInteraction},
+                {"sn", network},
+                {"sa", action},
+                {"st", target}
+            };
             return new HitBuilder(data);
         }
 
@@ -124,8 +135,7 @@ namespace GoogleAnalytics
         /// <param name="label">Specifies the user timing label.</param>
         public static HitBuilder CreateTiming(string category, string variable, TimeSpan? value, string label = null)
         {
-            var data = new Dictionary<string, string>();
-            data.Add("t", HitTypeUserTiming);
+            var data = new Dictionary<string, string> {{"t", HitTypeUserTiming}};
             if (category != null) data.Add("utc", category);
             if (variable != null) data.Add("utv", variable);
             if (value.HasValue) data.Add("utt", Math.Round(value.Value.TotalMilliseconds).ToString(CultureInfo.InvariantCulture));

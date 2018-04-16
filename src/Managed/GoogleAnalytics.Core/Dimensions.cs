@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GoogleAnalytics
+﻿namespace GoogleAnalytics
 {
     /// <summary>
     /// Dimensions in pixels.
@@ -25,11 +19,11 @@ namespace GoogleAnalytics
         /// <summary>
         /// Gets the width in pixels.
         /// </summary>
-        public int Width { get; private set; }
+        public int Width { get; }
 
         /// <summary>
         /// Gets the height in pixels.
         /// </summary>
-        public int Height { get; private set; }
+        public int Height { get; }
     }
 }
