@@ -4,7 +4,8 @@
       "src": [
         {
           "files": [
-            "**.sln"
+            "GoogleAnalytics.Core/GoogleAnalytics.Core.csproj",
+            "GoogleAnalytics.UWP/GoogleAnalytics.UWP.Managed.csproj"
           ],
           "src":    "../"
         }

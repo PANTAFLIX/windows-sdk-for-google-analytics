@@ -14,6 +14,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <PlatformTarget>x64</PlatformTarget>
     <DocumentationFile>bin\Release\netstandard2.0\GoogleAnalytics.Core.xml</DocumentationFile>
+    <DefineConstants>TRACE;RELEASE;NETSTANDARD2_0;CODE_ANALYSIS</DefineConstants>
   </PropertyGroup>
 
 </Project>
