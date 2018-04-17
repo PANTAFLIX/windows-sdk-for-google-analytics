@@ -20,7 +20,7 @@ namespace GoogleAnalytics
 
         private readonly IList<HitBuilder> _lineage;
         private readonly IDictionary<string, int> _impressions;
-
+        private readonly IDictionary<string, string> _utmParams;
 
         private HitBuilder()
         {
@@ -55,7 +55,7 @@ namespace GoogleAnalytics
             _impressions = new Dictionary<string, int>();
         }
 
-        private HitBuilder(IEnumerable<HitBuilder> lineage, IDictionary<string, string> data, IDictionary<string, int> impressions)
+        private HitBuilder(IEnumerable<HitBuilder> lineage, IDictionary<string, string> data, IDictionary<string, int> impressions = null)
         {
             _lineage = new List<HitBuilder>(lineage)
             {
@@ -64,6 +64,18 @@ namespace GoogleAnalytics
 
             Data = new Dictionary<string, string>(data);
             _impressions = new Dictionary<string, int>(impressions);
+        }
+
+        // TODO: setCampaignParamsFromUrl(String utmParams) 
+        private HitBuilder(IEnumerable<HitBuilder> lineage, IDictionary<string, string> data, IDictionary<string, string> utmParams)
+        {
+            _lineage = new List<HitBuilder>(lineage)
+            {
+                this
+            };
+
+            Data = new Dictionary<string, string>(data);
+            _utmParams = new Dictionary<string, string>(utmParams);
         }
 
         private IDictionary<string, string> Data { get; }
@@ -181,9 +193,6 @@ namespace GoogleAnalytics
             if (label != null) data.Add("utl", label);
             return new HitBuilder(data);
         }
-
-
-        // TODO: setCampaignParamsFromUrl(String utmParams) 
 
         /// <summary>
         ///     Looks up a value by name from the current instance.
@@ -344,6 +353,16 @@ namespace GoogleAnalytics
         }
 
         /// <summary>
+        ///     Sets campaign parameters from url. This method is not yet implemented
+        /// </summary>
+        /// <param name="utmParams"></param>
+        /// <returns></returns>
+        public HitBuilder SetCampaignParamsFromUrl(string utmParams)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
         ///     Adds promotion related information to the hit.
         /// </summary>
         /// <param name="promotion">The promotion related to the hit.</param>
@@ -362,7 +381,7 @@ namespace GoogleAnalytics
 
         /// <summary>
         ///     Sets a product action for all the products included in this hit. The action and its associated properties affect
-        ///     how the products added through <see cref="AddProduct(Ecommerce.Product)" /> are processed.
+        ///     how the products added through <see cref="AddProduct(Product)" /> are processed.
         /// </summary>
         /// <param name="action">The product action associated with the hit.</param>
         /// <returns>The builder object that you can use to chain calls.</returns>

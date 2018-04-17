@@ -3,7 +3,7 @@
   <metadata minClientVersion="2.5">    
     <id>UWP.SDKforGoogleAnalytics.Managed</id>
     <version>0.0.0-SpecifyVersionOnCommandline</version>
-    <title>Windows SDK for Google Analytics -Windows 10 UWP(C#)</title>
+    <title>Windows SDK for Google Analytics - Windows 10 UWP(C#)</title>
     <authors>.NET Foundation</authors>
     <owners>.NET Foundation</owners>
     <licenseUrl>http://github.com/dotnet/windows-sdk-for-google-analytics/blob/master/LICENSE</licenseUrl>

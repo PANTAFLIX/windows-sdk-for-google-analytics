@@ -94,6 +94,9 @@ namespace GoogleAnalytics
         public string UserLanguage => CultureInfo.CurrentUICulture.Name;
 
         /// <inheritdoc />
+        public string UserCountry => Windows.System.UserProfile.GlobalizationPreferences.HomeGeographicRegion;
+
+        /// <inheritdoc />
         /// <remarks>This feature not implemented on this UWP implementation </remarks>
         public int? ScreenColors => null;
 

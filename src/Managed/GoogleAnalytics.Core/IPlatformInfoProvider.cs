@@ -31,6 +31,11 @@ namespace GoogleAnalytics
         string UserLanguage { get; }
 
         /// <summary>
+        ///     Gets the country (e.g. 'us').
+        /// </summary>
+        string UserCountry { get; }
+
+        /// <summary>
         ///     Gets the Viewport Resolution.
         /// </summary>
         Dimensions? ViewPortResolution { get; }
