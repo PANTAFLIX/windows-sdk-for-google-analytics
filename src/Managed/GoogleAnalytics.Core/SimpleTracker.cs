@@ -49,12 +49,12 @@ namespace GoogleAnalytics
         /// <seealso href="https://developers.google.com/analytics/devguides/collection/protocol/v1/parameters#aiid"/>
         public bool AnonymizeIp { get; set; }
 
-        ///// <summary>
-        ///// Gets or sets the data source of the hit. Hits sent from analytics.js will have data source set to 'web'; hits sent from one of the mobile SDKs will have data source set to 'app'.
-        ///// </summary>
-        ///// <remarks>Optional.</remarks>
-        ///// <seealso href="https://developers.google.com/analytics/devguides/collection/protocol/v1/parameters#ds"/>
-        //public string DataSource { get; set; }
+        /// <summary>
+        /// Gets or sets the data source of the hit. Hits sent from analytics.js will have data source set to 'web'; hits sent from one of the mobile SDKs will have data source set to 'app'.
+        /// </summary>
+        /// <remarks>Optional.</remarks>
+        /// <seealso href="https://developers.google.com/analytics/devguides/collection/protocol/v1/parameters#ds"/>
+        public string DataSource { get; set; }
 
         #endregion
 
@@ -372,7 +372,7 @@ namespace GoogleAnalytics
             //if (UserId != null) result.Add("uid", UserId);
 
             // other params available but not usually used for apps
-            //if (DataSource != null) result.Add("ds", DataSource);
+            if (DataSource != null) result.Add("ds", DataSource);
             //if (LinkId != null) result.Add("linkid", LinkId);
             //if (DocumentLocationUrl != null) result.Add("dl", DocumentLocationUrl);
 
