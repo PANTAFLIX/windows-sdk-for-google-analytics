@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using GoogleAnalytics.Ecommerce;
+using System.Linq;
 
 namespace GoogleAnalytics
 {
@@ -18,6 +19,8 @@ namespace GoogleAnalytics
         private const string HitTypeUserTiming = "timing";
 
         private readonly IList<HitBuilder> _lineage;
+        private readonly IDictionary<string, int> _impressions;
+
 
         private HitBuilder()
         {
@@ -27,6 +30,7 @@ namespace GoogleAnalytics
             };
 
             Data = new Dictionary<string, string>();
+            _impressions = new Dictionary<string, int>();
         }
 
         private HitBuilder(IDictionary<string, string> data)
@@ -37,9 +41,10 @@ namespace GoogleAnalytics
             };
 
             Data = new Dictionary<string, string>(data);
+            _impressions = new Dictionary<string, int>();
         }
 
-        private HitBuilder(IList<HitBuilder> lineage, IDictionary<string, string> data)
+        private HitBuilder(IEnumerable<HitBuilder> lineage, IDictionary<string, string> data)
         {
             _lineage = new List<HitBuilder>(lineage)
             {
@@ -47,6 +52,18 @@ namespace GoogleAnalytics
             };
 
             Data = new Dictionary<string, string>(data);
+            _impressions = new Dictionary<string, int>();
+        }
+
+        private HitBuilder(IEnumerable<HitBuilder> lineage, IDictionary<string, string> data, IDictionary<string, int> impressions)
+        {
+            _lineage = new List<HitBuilder>(lineage)
+            {
+                this
+            };
+
+            Data = new Dictionary<string, string>(data);
+            _impressions = new Dictionary<string, int>(impressions);
         }
 
         private IDictionary<string, string> Data { get; }
@@ -104,7 +121,7 @@ namespace GoogleAnalytics
         /// </param>
         public static HitBuilder CreateScreenView(string screenName = null)
         {
-            var data = new Dictionary<string, string> {{"t", HitTypeScreenview}};
+            var data = new Dictionary<string, string> { { "t", HitTypeScreenview } };
             if (screenName != null) data.Add("cd", screenName);
             return new HitBuilder(data);
         }
@@ -116,7 +133,7 @@ namespace GoogleAnalytics
         /// <returns></returns>
         public static HitBuilder CreatePageView(string pageName = null, string title = null)
         {
-            var data = new Dictionary<string, string> {{"t", HitTypePageView}};
+            var data = new Dictionary<string, string> { { "t", HitTypePageView } };
             if (pageName != null) data.Add("dp", pageName);
             if (title != null) data.Add("dt", pageName);
             return new HitBuilder(data);
@@ -156,7 +173,7 @@ namespace GoogleAnalytics
         /// <param name="label">Specifies the user timing label.</param>
         public static HitBuilder CreateTiming(string category, string variable, TimeSpan? value, string label = null)
         {
-            var data = new Dictionary<string, string> {{"t", HitTypeUserTiming}};
+            var data = new Dictionary<string, string> { { "t", HitTypeUserTiming } };
             if (category != null) data.Add("utc", category);
             if (variable != null) data.Add("utv", variable);
             if (value.HasValue)
@@ -167,7 +184,6 @@ namespace GoogleAnalytics
 
 
         // TODO: setCampaignParamsFromUrl(String utmParams) 
-        // TODO: AddImpression(Ecommerce.Product product, string impressions)
 
         /// <summary>
         ///     Looks up a value by name from the current instance.
@@ -189,7 +205,7 @@ namespace GoogleAnalytics
         /// <returns>The builder object that you can use to chain calls.</returns>
         public HitBuilder Set(string paramName, string paramValue)
         {
-            return new HitBuilder(_lineage, new Dictionary<string, string> {{paramName, paramValue}});
+            return new HitBuilder(_lineage, new Dictionary<string, string> { { paramName, paramValue } });
         }
 
         /// <summary>
@@ -214,7 +230,7 @@ namespace GoogleAnalytics
         /// <returns>The builder object that you can use to chain calls.</returns>
         public HitBuilder SetCustomDimension(int index, string dimension)
         {
-            return new HitBuilder(_lineage, new Dictionary<string, string> {{$"cd{index}", dimension}});
+            return new HitBuilder(_lineage, new Dictionary<string, string> { { $"cd{index}", dimension } });
         }
 
         /// <summary>
@@ -225,10 +241,10 @@ namespace GoogleAnalytics
         /// <param name="index">The index/slot in which the metric will be set.</param>
         /// <param name="metric">The value of the metric for the given index.</param>
         /// <returns>The builder object that you can use to chain calls.</returns>
-        public HitBuilder SetCustomMetric(int index, long metric)
+        public HitBuilder SetCustomMetric(int index, float metric)
         {
             return new HitBuilder(_lineage,
-                new Dictionary<string, string> {{$"cm{index}", metric.ToString(CultureInfo.InvariantCulture)}});
+                new Dictionary<string, string> { { $"cm{index}", metric.ToString(CultureInfo.InvariantCulture) } });
         }
 
         /// <summary>
@@ -237,7 +253,7 @@ namespace GoogleAnalytics
         /// <returns>The builder object that you can use to chain calls.</returns>
         public HitBuilder SetNewSession()
         {
-            return new HitBuilder(_lineage, new Dictionary<string, string> {{"sc", "start"}});
+            return new HitBuilder(_lineage, new Dictionary<string, string> { { "sc", "start" } });
         }
 
         /// <summary>
@@ -246,7 +262,7 @@ namespace GoogleAnalytics
         /// <returns>The builder object that you can use to chain calls.</returns>
         public HitBuilder SetNonInteraction()
         {
-            return new HitBuilder(_lineage, new Dictionary<string, string> {{"ni", "1"}});
+            return new HitBuilder(_lineage, new Dictionary<string, string> { { "ni", "1" } });
         }
 
         /// <summary>
@@ -268,14 +284,63 @@ namespace GoogleAnalytics
             if (product.Price.HasValue)
                 data.Add($"pr{index}pr", product.Price.Value.ToString(CultureInfo.InvariantCulture));
             if (product.Quantity.HasValue)
-                data.Add($"pr{index}at", product.Quantity.Value.ToString(CultureInfo.InvariantCulture));
+                data.Add($"pr{index}qt", product.Quantity.Value.ToString(CultureInfo.InvariantCulture));
             if (product.CouponCode != null) data.Add($"pr{index}cc", product.CouponCode);
             if (product.Position.HasValue)
                 data.Add($"pr{index}ps", product.Position.Value.ToString(CultureInfo.InvariantCulture));
+
             foreach (var item in product.CustomDimensions) data.Add($"pr{index}cd{item.Key}", item.Value);
             foreach (var item in product.CustomMetrics)
                 data.Add($"pr{index}cm{item.Key}", item.Value.ToString(CultureInfo.InvariantCulture));
-            return new HitBuilder(_lineage, data) {ProductCount = index};
+
+            return new HitBuilder(_lineage, data) { ProductCount = index };
+        }
+
+        /// <summary>
+        /// Adds product information as impression to be sent with a given hit, optionally associated with named impression list.
+        /// </summary>
+        /// <param name="product">The product you wish to add as an impression.</param>
+        /// <param name="impressionList">The associated named impression list</param>
+        /// <returns>The builder object that you can use to chain calls.</returns>
+        public HitBuilder AddImpression(Product product, string impressionList)
+        {
+            var idxImpression = 1;
+            var idxProduct = 1;
+            if (string.IsNullOrEmpty(impressionList)) impressionList = string.Empty;
+
+            var impressions = new Dictionary<string, int>(_impressions);
+
+            if (!impressions.ContainsKey(impressionList))
+            {
+                impressions.Add(impressionList, 1);
+                idxImpression = impressions.Count;
+            }
+            else
+            {
+                idxImpression = impressions.Keys.ToList().IndexOf(impressionList) + 1;
+                idxProduct = impressions[impressionList]++;
+            }
+
+            var data = new Dictionary<string, string>();
+            if (!string.IsNullOrEmpty(impressionList)) data.Add($"il{idxImpression}nm", impressionList);
+            if (product.Id != null) data.Add($"il{idxImpression}pi{idxProduct}id", product.Id);
+            if (product.Name != null) data.Add($"il{idxImpression}pi{idxProduct}nm", product.Name);
+            if (product.Brand != null) data.Add($"il{idxImpression}pi{idxProduct}br", product.Brand);
+            if (product.Category != null) data.Add($"il{idxImpression}pi{idxProduct}ca", product.Category);
+            if (product.Variant != null) data.Add($"il{idxImpression}pi{idxProduct}va", product.Variant);
+            if (product.Price.HasValue) data.Add($"il{idxImpression}pi{idxProduct}pr", product.Price.Value.ToString(CultureInfo.InvariantCulture));
+            if (product.Position.HasValue) data.Add($"il{idxImpression}pi{idxProduct}ps", product.Position.Value.ToString(CultureInfo.InvariantCulture));
+
+            foreach (var item in product.CustomDimensions)
+            {
+                data.Add($"il{idxImpression}pi{idxProduct}cd{item.Key}", item.Value);
+            }
+
+            foreach (var item in product.CustomMetrics)
+            {
+                data.Add($"il{idxImpression}pi{idxProduct}cm{item.Key}", item.Value.ToString(CultureInfo.InvariantCulture));
+            }
+            return new HitBuilder(_lineage, data, impressions);
         }
 
         /// <summary>
@@ -292,7 +357,7 @@ namespace GoogleAnalytics
             if (promotion.Name != null) data.Add($"promo{index}nm", promotion.Name);
             if (promotion.Creative != null) data.Add($"promo{index}cr", promotion.Creative);
             if (promotion.Position != null) data.Add($"promo{index}ps", promotion.Position);
-            return new HitBuilder(_lineage, data) {PromotionCount = index};
+            return new HitBuilder(_lineage, data) { PromotionCount = index };
         }
 
         /// <summary>
@@ -328,7 +393,7 @@ namespace GoogleAnalytics
         /// <returns>The builder object that you can use to chain calls.</returns>
         public HitBuilder SetPromotionAction(PromotionAction action)
         {
-            return new HitBuilder(_lineage, new Dictionary<string, string> {{"pa", Promotion.GetAction(action)}});
+            return new HitBuilder(_lineage, new Dictionary<string, string> { { "pa", Promotion.GetAction(action) } });
         }
 
         /// <summary>
@@ -339,8 +404,8 @@ namespace GoogleAnalytics
         {
             var result = new Dictionary<string, string>();
             foreach (var hitBuilder in _lineage)
-            foreach (var item in hitBuilder.Data)
-                result[item.Key] = item.Value;
+                foreach (var item in hitBuilder.Data)
+                    result[item.Key] = item.Value;
             return result;
         }
     }
