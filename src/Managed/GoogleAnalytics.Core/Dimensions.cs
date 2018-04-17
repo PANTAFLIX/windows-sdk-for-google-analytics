@@ -1,12 +1,12 @@
 ﻿namespace GoogleAnalytics
 {
     /// <summary>
-    /// Dimensions in pixels.
+    ///     Dimensions in pixels.
     /// </summary>
     public struct Dimensions
     {
         /// <summary>
-        /// Creates a new object to store dimensions.
+        ///     Creates a new object to store dimensions.
         /// </summary>
         /// <param name="width">The width in pixels.</param>
         /// <param name="height">The height in pixels.</param>
@@ -17,12 +17,12 @@
         }
 
         /// <summary>
-        /// Gets the width in pixels.
+        ///     Gets the width in pixels.
         /// </summary>
         public int Width { get; }
 
         /// <summary>
-        /// Gets the height in pixels.
+        ///     Gets the height in pixels.
         /// </summary>
         public int Height { get; }
     }

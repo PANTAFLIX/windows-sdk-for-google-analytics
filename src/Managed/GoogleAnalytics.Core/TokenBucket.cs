@@ -4,12 +4,11 @@ namespace GoogleAnalytics
 {
     internal class TokenBucket
     {
+        private readonly double _capacity;
+        private readonly double _fillRate;
         private readonly object _locker = new object();
-
-        private double _capacity;
-        private double _tokens;
-        private double _fillRate;
         private DateTime _timeStamp;
+        private double _tokens;
 
         public TokenBucket(double tokens, double fillRate)
         {

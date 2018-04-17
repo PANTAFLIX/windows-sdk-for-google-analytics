@@ -9,41 +9,41 @@ using Windows.UI.Xaml;
 namespace GoogleAnalytics
 {
     /// <summary>
-    /// Provides shared/platform specific infrastrcuture for GoogleAnalytics.Core Tracker
+    ///     Provides shared/platform specific infrastrcuture for GoogleAnalytics.Core Tracker
     /// </summary>
     public sealed class AnalyticsManager : TrackerManager
     {
         private const string KeyAppOptOut = "GoogleAnaltyics.AppOptOut";
 
         private static AnalyticsManager _current;
+        private readonly Application _application;
+        private bool _autoAppLifetimeMonitoring;
+        private bool _autoTrackNetworkConnectivity;
 
         private bool _isAppOptOutSet;
-        private readonly Application _application;
         private bool _reportUncaughtExceptions;
-        private bool _autoTrackNetworkConnectivity;
-        private bool _autoAppLifetimeMonitoring;
 
         /// <summary>
-        /// Instantiates a new instance of <see cref="AnalyticsManager"/> 
+        ///     Instantiates a new instance of <see cref="AnalyticsManager" />
         /// </summary>
         /// <param name="platformInfoProvider"> The platform info provider to be used by this Analytics Manager. Can not be null.</param>
-        public AnalyticsManager ( IPlatformInfoProvider platformInfoProvider) : base (platformInfoProvider )
+        public AnalyticsManager(IPlatformInfoProvider platformInfoProvider) : base(platformInfoProvider)
         {
-            _application = Application.Current; 
+            _application = Application.Current;
         }
 
         private AnalyticsManager(Application application) : base(new PlatformInfoProvider())
         {
-            this._application = application;
+            _application = application;
         }
 
         /// <summary>
-        /// Shared, singleton instance of AnalyticsManager 
+        ///     Shared, singleton instance of AnalyticsManager
         /// </summary>
         public static AnalyticsManager Current => _current ?? (_current = new AnalyticsManager(Application.Current));
 
         /// <summary>
-        /// True when the user has opted out of analytics, this disables all tracking activities.
+        ///     True when the user has opted out of analytics, this disables all tracking activities.
         /// </summary>
         /// <remarks>See Google Analytics usage guidelines for more information.</remarks>
         public override bool AppOptOut
@@ -63,7 +63,7 @@ namespace GoogleAnalytics
         }
 
         /// <summary>
-        /// Enables (when set to true) automatic catching and tracking of Unhandled Exceptions.
+        ///     Enables (when set to true) automatic catching and tracking of Unhandled Exceptions.
         /// </summary>
         public bool ReportUncaughtExceptions
         {
@@ -84,11 +84,13 @@ namespace GoogleAnalytics
                 }
             }
         }
+
         /// <summary>
-        /// Enables (when set to true) automatic dispatching of queued <see cref="Hit"/> on app Suspend, and automatic restart of dispatch timer upon resume.         
+        ///     Enables (when set to true) automatic dispatching of queued <see cref="Hit" /> on app Suspend, and automatic restart
+        ///     of dispatch timer upon resume.
         /// </summary>
         /// <remarks>
-        /// Default value is false, since we default to immediate dispatching. See <see cref="ServiceManager.DispatchPeriod"/>
+        ///     Default value is false, since we default to immediate dispatching. See <see cref="ServiceManager.DispatchPeriod" />
         /// </remarks>
         public bool AutoAppLifetimeMonitoring
         {
@@ -111,7 +113,8 @@ namespace GoogleAnalytics
         }
 
         /// <summary>
-        /// Enables (when set to true) listening to network connectivity events to have trackers behave accordingly to their connectivity status.
+        ///     Enables (when set to true) listening to network connectivity events to have trackers behave accordingly to their
+        ///     connectivity status.
         /// </summary>
         public bool AutoTrackNetworkConnectivity
         {
@@ -128,37 +131,32 @@ namespace GoogleAnalytics
                 else
                 {
                     NetworkInformation.NetworkStatusChanged -= NetworkInformation_NetworkStatusChanged;
-                    base.IsEnabled = true;
+                    IsEnabled = true;
                 }
             }
         }
 
 
-
-
         /// <summary>
-        /// Creates a new Tracker using a given property ID. 
+        ///     Creates a new Tracker using a given property ID.
         /// </summary>
-        /// <param name="propertyId">The property ID that the <see cref="Tracker"/> should log to.</param>
+        /// <param name="propertyId">The property ID that the <see cref="Tracker" /> should log to.</param>
         /// <returns>The new or existing instance keyed on the property ID.</returns>
         public override Tracker CreateTracker(string propertyId)
         {
             var tracker = base.CreateTracker(propertyId);
             tracker.AppName = Package.Current.Id.Name;
-            tracker.AppVersion = $"{Package.Current.Id.Version.Major}.{Package.Current.Id.Version.Minor}.{Package.Current.Id.Version.Build}.{Package.Current.Id.Version.Revision}";
+            tracker.AppVersion =
+                $"{Package.Current.Id.Version.Major}.{Package.Current.Id.Version.Minor}.{Package.Current.Id.Version.Build}.{Package.Current.Id.Version.Revision}";
             return tracker;
         }
 
         private void LoadAppOptOut()
         {
             if (ApplicationData.Current.LocalSettings.Values.ContainsKey(KeyAppOptOut))
-            {
-                base.AppOptOut = (bool)ApplicationData.Current.LocalSettings.Values[KeyAppOptOut];
-            }
+                base.AppOptOut = (bool) ApplicationData.Current.LocalSettings.Values[KeyAppOptOut];
             else
-            {
                 base.AppOptOut = false;
-            }
             _isAppOptOutSet = true;
         }
 
@@ -208,11 +206,9 @@ namespace GoogleAnalytics
 
         private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
-            var ex = e.Exception.InnerException ?? e.Exception; // inner exception contains better info for unobserved tasks
-            foreach (var tracker in Trackers)
-            {
-                tracker.Send(HitBuilder.CreateException(ex.ToString(), false).Build());
-            }
+            var ex = e.Exception.InnerException ??
+                     e.Exception; // inner exception contains better info for unobserved tasks
+            foreach (var tracker in Trackers) tracker.Send(HitBuilder.CreateException(ex.ToString(), false).Build());
         }
 
         private void CoreApplication_UnhandledErrorDetected(object sender, UnhandledErrorDetectedEventArgs e)
@@ -223,10 +219,7 @@ namespace GoogleAnalytics
             }
             catch (Exception ex)
             {
-                foreach (var tracker in Trackers)
-                {
-                    tracker.Send(HitBuilder.CreateException(ex.Message, true).Build());
-                }
+                foreach (var tracker in Trackers) tracker.Send(HitBuilder.CreateException(ex.Message, true).Build());
                 var t = DispatchAsync();
                 throw;
             }

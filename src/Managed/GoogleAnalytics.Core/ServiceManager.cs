@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace GoogleAnalytics
 {
     /// <summary>
-    /// Implements a service manager used to send <see cref="Hit"/>s to Google Analytics.
+    ///     Implements a service manager used to send <see cref="Hit" />s to Google Analytics.
     /// </summary>
     public class ServiceManager : IServiceManager
     {
@@ -17,33 +17,17 @@ namespace GoogleAnalytics
         private static readonly Uri EndPointSecureDebug = new Uri("https://ssl.google-analytics.com/debug/collect");
         private static readonly Uri EndPointUnsecure = new Uri("http://www.google-analytics.com/collect");
         private static readonly Uri EndPointSecure = new Uri("https://ssl.google-analytics.com/collect");
+        private readonly IList<Task> _dispatchingTasks;
 
         private readonly Queue<Hit> _hits;
-        private readonly IList<Task> _dispatchingTasks;
         private readonly TokenBucket _hitTokenBucket;
-
-        private Timer _timer;
         private TimeSpan _dispatchPeriod;
         private bool _isEnabled = true;
 
-        /// <summary>
-        /// Provides notification that a <see cref="Hit"/> has been been successfully sent.
-        /// </summary>
-        public event EventHandler<HitSentEventArgs> HitSent;
+        private Timer _timer;
 
         /// <summary>
-        /// Provides notification that a <see cref="Hit"/> failed to send.
-        /// </summary>
-        /// <remarks>Failed <see cref="Hit"/>s will be added to the queue in order to reattempt at the next dispatch time.</remarks>
-        public event EventHandler<HitFailedEventArgs> HitFailed;
-
-        /// <summary>
-        /// Provides notification that a <see cref="Hit"/> was malformed and rejected by Google Analytics.
-        /// </summary>
-        public event EventHandler<HitMalformedEventArgs> HitMalformed;
-
-        /// <summary>
-        /// Instantiates a new instance of <see cref="ServiceManager"/>.
+        ///     Instantiates a new instance of <see cref="ServiceManager" />.
         /// </summary>
         public ServiceManager()
         {
@@ -56,37 +40,38 @@ namespace GoogleAnalytics
         }
 
         /// <summary>
-        /// Gets or sets whether <see cref="Hit"/>s should be sent via SSL. Default is true.
+        ///     Gets or sets whether <see cref="Hit" />s should be sent via SSL. Default is true.
         /// </summary>
         public bool IsSecure { get; set; }
 
         /// <summary>
-        /// Gets or sets whether <see cref="Hit"/>s should be sent to the debug endpoint. Default is false.
+        ///     Gets or sets whether <see cref="Hit" />s should be sent to the debug endpoint. Default is false.
         /// </summary>
         public bool IsDebug { get; set; }
 
         /// <summary>
-        /// Gets or sets whether throttling should be used. Default is false.
+        ///     Gets or sets whether throttling should be used. Default is false.
         /// </summary>
         public bool ThrottlingEnabled { get; set; }
 
         /// <summary>
-        /// Gets or sets whether data should be sent via POST or GET method. Default is POST.
+        ///     Gets or sets whether data should be sent via POST or GET method. Default is POST.
         /// </summary>
         public bool PostData { get; set; }
 
         /// <summary>
-        /// Gets or sets whether a cache buster should be applied to all requests. Default is false.
+        ///     Gets or sets whether a cache buster should be applied to all requests. Default is false.
         /// </summary>
         public bool BustCache { get; set; }
 
         /// <summary>
-        /// Gets or sets the user agent request header used by Google Analytics to determine the platform and device generating the hits.
+        ///     Gets or sets the user agent request header used by Google Analytics to determine the platform and device generating
+        ///     the hits.
         /// </summary>
         public string UserAgent { get; set; }
 
         /// <summary>
-        /// Gets or sets the frequency at which hits should be sent to the service. Default is immediate.
+        ///     Gets or sets the frequency at which hits should be sent to the service. Default is immediate.
         /// </summary>
         /// <remarks>Setting to TimeSpan.Zero will cause the hit to get sent immediately.</remarks>
         public TimeSpan DispatchPeriod
@@ -101,15 +86,14 @@ namespace GoogleAnalytics
                     _timer.Dispose();
                     _timer = null;
                 }
+
                 if (_dispatchPeriod > TimeSpan.Zero)
-                {
                     _timer = new Timer(timer_Tick, null, DispatchPeriod, DispatchPeriod);
-                }
             }
         }
 
         /// <summary>
-        /// Gets or sets whether the dispatcher is enabled. If disabled, hits will be queued but not dispatched.
+        ///     Gets or sets whether the dispatcher is enabled. If disabled, hits will be queued but not dispatched.
         /// </summary>
         /// <remarks>Typically this is used to indicate whether or not the network is available.</remarks>
         public bool IsEnabled
@@ -127,53 +111,7 @@ namespace GoogleAnalytics
             }
         }
 
-        /// <summary>
-        /// Empties the queue of <see cref="Hit"/>s waiting to be dispatched.
-        /// </summary>
-        /// <remarks>If a <see cref="Hit"/> is actively beeing sent, this will not abort the request.</remarks>
-        public void Clear()
-        {
-            lock (_hits)
-            {
-                _hits.Clear();
-            }
-        }
-
-        /// <summary>
-        /// Dispatches all hits in the queue.
-        /// </summary>
-        /// <returns>Returns once all items that were in the queue at the time the method was called have finished being sent.</returns>
-        public async Task DispatchAsync()
-        {
-            if (!_isEnabled) return;
-
-            Task allDispatchingTasks = null;
-            lock (_dispatchingTasks)
-            {
-                if (_dispatchingTasks.Any())
-                {
-                    allDispatchingTasks = Task.WhenAll(_dispatchingTasks);
-                }
-            }
-            if (allDispatchingTasks != null)
-            {
-                await allDispatchingTasks;
-            }
-
-            if (!_isEnabled) return;
-
-            Hit[] hitsToSend;
-            lock (_hits)
-            {
-                hitsToSend = _hits.ToArray();
-            }
-            if (hitsToSend.Any())
-            {
-                await RunDispatchingTask(DispatchQueuedHits(hitsToSend));
-            }
-        }
-
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public virtual void EnqueueHit(IDictionary<string, string> @params)
         {
             var hit = new Hit(@params);
@@ -191,10 +129,65 @@ namespace GoogleAnalytics
         }
 
         /// <summary>
-        /// Suspends operations and flushes the queue.
+        ///     Provides notification that a <see cref="Hit" /> has been been successfully sent.
         /// </summary>
-        /// <remarks>Call <see cref="Resume"/> when returning from a suspended state to resume operations.</remarks>
-        /// <returns>Operation returns when all <see cref="Hit"/>s have been flushed.</returns>
+        public event EventHandler<HitSentEventArgs> HitSent;
+
+        /// <summary>
+        ///     Provides notification that a <see cref="Hit" /> failed to send.
+        /// </summary>
+        /// <remarks>Failed <see cref="Hit" />s will be added to the queue in order to reattempt at the next dispatch time.</remarks>
+        public event EventHandler<HitFailedEventArgs> HitFailed;
+
+        /// <summary>
+        ///     Provides notification that a <see cref="Hit" /> was malformed and rejected by Google Analytics.
+        /// </summary>
+        public event EventHandler<HitMalformedEventArgs> HitMalformed;
+
+        /// <summary>
+        ///     Empties the queue of <see cref="Hit" />s waiting to be dispatched.
+        /// </summary>
+        /// <remarks>If a <see cref="Hit" /> is actively beeing sent, this will not abort the request.</remarks>
+        public void Clear()
+        {
+            lock (_hits)
+            {
+                _hits.Clear();
+            }
+        }
+
+        /// <summary>
+        ///     Dispatches all hits in the queue.
+        /// </summary>
+        /// <returns>Returns once all items that were in the queue at the time the method was called have finished being sent.</returns>
+        public async Task DispatchAsync()
+        {
+            if (!_isEnabled) return;
+
+            Task allDispatchingTasks = null;
+            lock (_dispatchingTasks)
+            {
+                if (_dispatchingTasks.Any()) allDispatchingTasks = Task.WhenAll(_dispatchingTasks);
+            }
+
+            if (allDispatchingTasks != null) await allDispatchingTasks;
+
+            if (!_isEnabled) return;
+
+            Hit[] hitsToSend;
+            lock (_hits)
+            {
+                hitsToSend = _hits.ToArray();
+            }
+
+            if (hitsToSend.Any()) await RunDispatchingTask(DispatchQueuedHits(hitsToSend));
+        }
+
+        /// <summary>
+        ///     Suspends operations and flushes the queue.
+        /// </summary>
+        /// <remarks>Call <see cref="Resume" /> when returning from a suspended state to resume operations.</remarks>
+        /// <returns>Operation returns when all <see cref="Hit" />s have been flushed.</returns>
         public async Task SuspendAsync()
         {
             await DispatchAsync(); // flush all pending hits in the queue
@@ -208,15 +201,12 @@ namespace GoogleAnalytics
         }
 
         /// <summary>
-        /// Resumes operations after <see cref="SuspendAsync"/> is called.
+        ///     Resumes operations after <see cref="SuspendAsync" /> is called.
         /// </summary>
         public void Resume()
         {
             // restore the timer if appropriate.
-            if (_dispatchPeriod > TimeSpan.Zero)
-            {
-                _timer = new Timer(timer_Tick, null, DispatchPeriod, DispatchPeriod);
-            }
+            if (_dispatchPeriod > TimeSpan.Zero) _timer = new Timer(timer_Tick, null, DispatchPeriod, DispatchPeriod);
         }
 
         private async void timer_Tick(object sender)
@@ -230,6 +220,7 @@ namespace GoogleAnalytics
             {
                 _dispatchingTasks.Add(newDispatchingTask);
             }
+
             try
             {
                 await newDispatchingTask;
@@ -249,12 +240,11 @@ namespace GoogleAnalytics
             {
                 var now = DateTimeOffset.UtcNow;
                 foreach (var hit in hits)
-                {
                     if (_isEnabled && (!ThrottlingEnabled || _hitTokenBucket.Consume()))
                     {
                         // clone the data
                         var hitData = hit.Data.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                        hitData.Add("qt", ((long)now.Subtract(hit.TimeStamp).TotalMilliseconds).ToString());
+                        hitData.Add("qt", ((long) now.Subtract(hit.TimeStamp).TotalMilliseconds).ToString());
                         await DispatchHitData(hit, httpClient, hitData);
                     }
                     else
@@ -264,7 +254,6 @@ namespace GoogleAnalytics
                             _hits.Enqueue(hit);
                         }
                     }
-                }
             }
         }
 
@@ -302,9 +291,12 @@ namespace GoogleAnalytics
             }
         }
 
-        private async Task<HttpResponseMessage> SendHitAsync(Hit hit, HttpClient httpClient, IDictionary<string, string> hitData)
+        private async Task<HttpResponseMessage> SendHitAsync(Hit hit, HttpClient httpClient,
+            IDictionary<string, string> hitData)
         {
-            var endPoint = IsDebug ? (IsSecure ? EndPointSecureDebug : EndPointUnsecureDebug) : (IsSecure ? EndPointSecure : EndPointUnsecure);
+            var endPoint = IsDebug
+                ? (IsSecure ? EndPointSecureDebug : EndPointUnsecureDebug)
+                : (IsSecure ? EndPointSecure : EndPointUnsecure);
             if (!PostData) return await httpClient.GetAsync(endPoint + "?" + GetUrlEncodedString(hitData));
 
             using (var content = GetEncodedContent(hitData))
@@ -315,7 +307,7 @@ namespace GoogleAnalytics
 
         private void OnHitMalformed(Hit hit, HttpResponseMessage response)
         {
-            HitMalformed?.Invoke(this, new HitMalformedEventArgs(hit, (int)response.StatusCode));
+            HitMalformed?.Invoke(this, new HitMalformedEventArgs(hit, (int) response.StatusCode));
         }
 
         private void OnHitFailed(Hit hit, Exception exception)
@@ -331,19 +323,13 @@ namespace GoogleAnalytics
         private HttpClient GetHttpClient()
         {
             var result = new HttpClient();
-            if (!string.IsNullOrEmpty(UserAgent))
-            {
-                result.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
-            }
+            if (!string.IsNullOrEmpty(UserAgent)) result.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
             return result;
         }
 
         private static string GetCacheBuster()
         {
-            if (_random == null)
-            {
-                _random = new Random();
-            }
+            if (_random == null) _random = new Random();
             return _random.Next().ToString();
         }
 
@@ -358,12 +344,14 @@ namespace GoogleAnalytics
 
             return string.Join("&", nameValueCollection
                 .Where(item => item.Value != null)
-                .Select(item => item.Key + "=" + Uri.EscapeDataString(item.Value.Length > maxUriStringSize ? item.Value.Substring(0, maxUriStringSize) : item.Value)));
+                .Select(item => item.Key + "=" + Uri.EscapeDataString(item.Value.Length > maxUriStringSize
+                                    ? item.Value.Substring(0, maxUriStringSize)
+                                    : item.Value)));
         }
     }
 
     /// <summary>
-    /// Supplies additional information when <see cref="Hit"/>s fail to send.
+    ///     Supplies additional information when <see cref="Hit" />s fail to send.
     /// </summary>
     public sealed class HitFailedEventArgs : EventArgs
     {
@@ -374,18 +362,18 @@ namespace GoogleAnalytics
         }
 
         /// <summary>
-        /// Gets the <see cref="Exception"/> thrown when the failure occurred.
+        ///     Gets the <see cref="Exception" /> thrown when the failure occurred.
         /// </summary>
-        public Exception Error { get; private set; }
+        public Exception Error { get; }
 
         /// <summary>
-        /// Gets the <see cref="Hit"/> associated with the event.
+        ///     Gets the <see cref="Hit" /> associated with the event.
         /// </summary>
-        public Hit Hit { get; private set; }
+        public Hit Hit { get; }
     }
 
     /// <summary>
-    /// Supplies additional information when <see cref="Hit"/>s are successfully sent.
+    ///     Supplies additional information when <see cref="Hit" />s are successfully sent.
     /// </summary>
     public sealed class HitSentEventArgs : EventArgs
     {
@@ -396,18 +384,18 @@ namespace GoogleAnalytics
         }
 
         /// <summary>
-        /// Gets the response text.
+        ///     Gets the response text.
         /// </summary>
-        public string Response { get; private set; }
+        public string Response { get; }
 
         /// <summary>
-        /// Gets the <see cref="Hit"/> associated with the event.
+        ///     Gets the <see cref="Hit" /> associated with the event.
         /// </summary>
-        public Hit Hit { get; private set; }
+        public Hit Hit { get; }
     }
 
     /// <summary>
-    /// Supplies additional information when <see cref="Hit"/>s are malformed and cannot be sent.
+    ///     Supplies additional information when <see cref="Hit" />s are malformed and cannot be sent.
     /// </summary>
     public sealed class HitMalformedEventArgs : EventArgs
     {
@@ -418,13 +406,13 @@ namespace GoogleAnalytics
         }
 
         /// <summary>
-        /// Gets the HTTP status code that may provide more information about the problem.
+        ///     Gets the HTTP status code that may provide more information about the problem.
         /// </summary>
-        public int HttpStatusCode { get; private set; }
+        public int HttpStatusCode { get; }
 
         /// <summary>
-        /// Gets the <see cref="Hit"/> associated with the event.
+        ///     Gets the <see cref="Hit" /> associated with the event.
         /// </summary>
-        public Hit Hit { get; private set; }
+        public Hit Hit { get; }
     }
 }
