@@ -58,8 +58,9 @@ namespace GoogleAnalytics.Sample
             if (e.PrelaunchActivated != false) return;
             if (rootFrame.Content == null)
             {
-              
-                Tracker = AnalyticsManager.Current.CreateTracker("UA-TES2");
+                // Insert your UniversalAnalytics tracking ID
+                Tracker = AnalyticsManager.Current.CreateTracker("UA-8877363-7");
+
                 AnalyticsManager.Current.ReportUncaughtExceptions = true;
                 AnalyticsManager.Current.AutoAppLifetimeMonitoring = true;
                     

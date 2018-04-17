@@ -10,6 +10,7 @@ namespace GoogleAnalytics
     public sealed class HitBuilder
     {
         private const string HitTypeScreenview = "screenview";
+        private const string HitTypePageView = "pageview";
         private const string HitTypeEvent = "event";
         private const string HitTypeException = "exception";
         private const string HitTypeSocialNetworkInteraction = "social";
@@ -99,8 +100,22 @@ namespace GoogleAnalytics
         /// <param name="screenName">Specifies the 'Screen Name' of the screenview hit. Note: this will not affect subsequent hits. To do this, set the ScreenName property on the <see cref="Tracker"/> instead.</param>
         public static HitBuilder CreateScreenView(string screenName = null)
         {
-            var data = new Dictionary<string, string> {{"t", HitTypeScreenview}};
+            var data = new Dictionary<string, string> { { "t", HitTypeScreenview } };
             if (screenName != null) data.Add("cd", screenName);
+            return new HitBuilder(data);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="pageName"></param>
+        /// <param name="title"></param>
+        /// <returns></returns>
+        public static HitBuilder CreatePageView(string pageName = null, string title = null)
+        {
+            var data = new Dictionary<string, string> { { "t", HitTypePageView } };
+            if (pageName != null) data.Add("dp", pageName);
+            if (title != null) data.Add("dt", pageName);
             return new HitBuilder(data);
         }
 
