@@ -13,6 +13,7 @@ using Windows.UI.Xaml;
 
 namespace GoogleAnalytics
 {
+    /// <inheritdoc />
     /// <summary>
     ///     Windows 10, Universal Platform implementation of GoogleAnalytics.Core.IPlatformInfoProvider.
     /// </summary>
@@ -155,10 +156,13 @@ namespace GoogleAnalytics
             var ai = AnalyticsInfo.VersionInfo;
             var sv = ai.DeviceFamilyVersion;
             var v = ulong.Parse(sv);
-            var v1 = (v & 0xFFFF000000000000L) >> 48;
-            var v2 = (v & 0x0000FFFF00000000L) >> 32;
-
-            var systemVersion = $"{v1}.{v2}";
+            var v1 = (v & 0xFFFF000000000000L) >> 48; // major
+            var v2 = (v & 0x0000FFFF00000000L) >> 32; // minor
+            var v3 = (v & 0x00000000FFFF0000L) >> 16; // build
+            var v4 = (v & 0x000000000000FFFFL);       // revision
+            
+            // here 10.0.16299.1
+            var systemVersion = $"{v1}.{v2}.{v3}.{v4}";
 
             switch (ai.DeviceFamily)
             {

@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace GoogleAnalytics
 {
+    /// <inheritdoc />
     /// <summary>
-    ///     Implements a service manager used to send <see cref="Hit" />s to Google Analytics.
+    ///     Implements a service manager used to send <see cref="T:GoogleAnalytics.Hit" />s to Google Analytics.
     /// </summary>
     public class ServiceManager : IServiceManager
     {
@@ -88,7 +89,7 @@ namespace GoogleAnalytics
                 }
 
                 if (_dispatchPeriod > TimeSpan.Zero)
-                    _timer = new Timer(timer_Tick, null, DispatchPeriod, DispatchPeriod);
+                    _timer = new Timer(Timer_Tick, null, DispatchPeriod, DispatchPeriod);
             }
         }
 
@@ -206,10 +207,10 @@ namespace GoogleAnalytics
         public void Resume()
         {
             // restore the timer if appropriate.
-            if (_dispatchPeriod > TimeSpan.Zero) _timer = new Timer(timer_Tick, null, DispatchPeriod, DispatchPeriod);
+            if (_dispatchPeriod > TimeSpan.Zero) _timer = new Timer(Timer_Tick, null, DispatchPeriod, DispatchPeriod);
         }
 
-        private async void timer_Tick(object sender)
+        private async void Timer_Tick(object sender)
         {
             await DispatchAsync();
         }
